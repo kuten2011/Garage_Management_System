@@ -16,14 +16,16 @@ import {
   CheckCircle,
 } from "lucide-react";
 
-const API_BASE = "http://localhost:8080/customer";
+const API_BASE = "/customer";
 const REPAIR_API = `${API_BASE}/repairs`;
 const REPAIR_PART_API = `${API_BASE}/repair-parts/phieu`;
 const REPAIR_SERVICE_API = `${API_BASE}/repair-services/phieu`;
 
-const API_BASEE = "http://localhost:8080/admin";
-const REPAIR_PART_APII = `${API_BASEE}/repair-parts/phieu`;
-const REPAIR_SERVICE_APII = `${API_BASEE}/repair-services/phieu`;
+const API_BASE_ADMIN = "/admin";
+const REPAIR_PART_ADMIN_API = `${API_BASE_ADMIN}/repair-parts/phieu`;
+const REPAIR_SERVICE_ADMIN_API = `${API_BASE_ADMIN}/repair-services/phieu`;
+const PARTS_API = `${API_BASE_ADMIN}/parts`;       // API lấy tất cả phụ tùng
+const SERVICES_API = `${API_BASE_ADMIN}/services`; // API lấy tất cả dịch vụ
 
 export default function RepairDetail() {
   const { maPhieu } = useParams();
@@ -32,6 +34,10 @@ export default function RepairDetail() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [totalAmount, setTotalAmount] = useState(0);
+
+  // Danh sách phụ tùng và dịch vụ từ database (cho dropdown)
+  const [allParts, setAllParts] = useState([]);     // [{maPT, tenPT, donGia, ...}]
+  const [allServices, setAllServices] = useState([]); // [{maDV, tenDV, giaTien, ...}]
 
   // Modal thêm phụ tùng/dịch vụ (chỉ admin)
   const [showAddPart, setShowAddPart] = useState(false);
@@ -43,25 +49,30 @@ export default function RepairDetail() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [qrCode, setQrCode] = useState(null);
 
-  // Kiểm tra role từ localStorage
+  // Kiểm tra role
   const userData = JSON.parse(localStorage.getItem("user") || "{}");
   const authorities = userData.authorities || [];
   const roles = authorities.map(auth => typeof auth === "string" ? auth : auth.authority);
   const isStaff = roles.some(role => role.includes("EMPLOYEE") || role.includes("MANAGER") || role.includes("ADMIN"));
   const isCustomer = !isStaff && roles.includes("ROLE_CUSTOMER");
 
+  // Load chi tiết phiếu + danh sách phụ tùng/dịch vụ từ DB
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [repairRes, partsRes, servicesRes] = await Promise.all([
+      const [repairRes, partsRes, servicesRes, allPartsRes, allServicesRes] = await Promise.all([
         axiosInstance.get(`${REPAIR_API}/${maPhieu}`),
         axiosInstance.get(`${REPAIR_PART_API}/${maPhieu}`),
         axiosInstance.get(`${REPAIR_SERVICE_API}/${maPhieu}`),
+        axiosInstance.get(PARTS_API),        // Tất cả phụ tùng
+        axiosInstance.get(SERVICES_API),     // Tất cả dịch vụ
       ]);
 
       setRepair(repairRes.data);
       setParts(partsRes.data || []);
       setServices(servicesRes.data || []);
+      setAllParts(allPartsRes.data.content || allPartsRes.data || []);
+      setAllServices(allServicesRes.data.content || allServicesRes.data || []);
 
       // Tính tổng tiền
       const totalParts = (partsRes.data || []).reduce((sum, p) => sum + (p.thanhTien || 0), 0);
@@ -83,9 +94,9 @@ export default function RepairDetail() {
   // === CHỈ ADMIN MỚI ĐƯỢC THÊM/XÓA ===
   const handleAddPart = async () => {
     if (!isStaff) return;
-    if (!newPart.maPT.trim()) return alert("Vui lòng nhập mã phụ tùng!");
+    if (!newPart.maPT.trim()) return alert("Vui lòng chọn phụ tùng!");
     try {
-      await axiosInstance.post(`${REPAIR_PART_APII}/${maPhieu}`, newPart);
+      await axiosInstance.post(`${REPAIR_PART_ADMIN_API}/${maPhieu}`, newPart);
       alert("Thêm phụ tùng thành công!");
       setShowAddPart(false);
       setNewPart({ maPT: "", soLuong: 1 });
@@ -99,7 +110,7 @@ export default function RepairDetail() {
     if (!isStaff) return;
     if (!window.confirm("Xóa phụ tùng này khỏi phiếu?")) return;
     try {
-      await axiosInstance.delete(`${REPAIR_PART_APII}/${maPhieu}/phutung/${maPT}`);
+      await axiosInstance.delete(`${REPAIR_PART_ADMIN_API}/${maPhieu}/phutung/${maPT}`);
       fetchData();
     } catch (err) {
       alert("Xóa thất bại!");
@@ -108,9 +119,9 @@ export default function RepairDetail() {
 
   const handleAddService = async () => {
     if (!isStaff) return;
-    if (!newService.maDV.trim()) return alert("Vui lòng nhập mã dịch vụ!");
+    if (!newService.maDV.trim()) return alert("Vui lòng chọn dịch vụ!");
     try {
-      await axiosInstance.post(`${REPAIR_SERVICE_APII}/${maPhieu}`, newService);
+      await axiosInstance.post(`${REPAIR_SERVICE_ADMIN_API}/${maPhieu}`, newService);
       alert("Thêm dịch vụ thành công!");
       setShowAddService(false);
       setNewService({ maDV: "", soLuong: 1 });
@@ -124,7 +135,7 @@ export default function RepairDetail() {
     if (!isStaff) return;
     if (!window.confirm("Xóa dịch vụ này khỏi phiếu?")) return;
     try {
-      await axiosInstance.delete(`${REPAIR_SERVICE_APII}/${maPhieu}/dichvu/${maDV}`);
+      await axiosInstance.delete(`${REPAIR_SERVICE_ADMIN_API}/${maPhieu}/dichvu/${maDV}`);
       fetchData();
     } catch (err) {
       alert("Xóa thất bại!");
@@ -135,7 +146,7 @@ export default function RepairDetail() {
   const handlePayCash = async () => {
     if (!isStaff) return;
     try {
-      await axiosInstance.post(`${API_BASEE}/repairs/${maPhieu}/pay-cash`);
+      await axiosInstance.post(`${API_BASE_ADMIN}/repairs/${maPhieu}/pay-cash`);
       alert("Thanh toán tiền mặt thành công!");
       fetchData();
       setShowPaymentModal(false);
@@ -144,7 +155,7 @@ export default function RepairDetail() {
     }
   };
 
-  // Lấy QR chuyển khoản (khách hàng + admin đều dùng được)
+  // Lấy QR chuyển khoản
   const handleGetQR = async () => {
     try {
       const res = await axiosInstance.get(`${API_BASE}/repairs/${maPhieu}/qr`);
@@ -159,7 +170,7 @@ export default function RepairDetail() {
     if (!isStaff) return;
     if (!window.confirm("Xác nhận đã nhận tiền chuyển khoản cho phiếu này?")) return;
     try {
-      await axiosInstance.post(`${API_BASEE}/repairs/${maPhieu}/confirm-payment`);
+      await axiosInstance.post(`${API_BASE_ADMIN}/repairs/${maPhieu}/confirm-payment`);
       alert("Xác nhận thành công!");
       fetchData();
       setQrCode(null);
@@ -216,7 +227,7 @@ export default function RepairDetail() {
           </div>
         </div>
 
-        {/* Phụ tùng – chỉ admin thấy nút thêm */}
+        {/* Phụ tùng */}
         <div className="bg-white rounded-3xl shadow-2xl p-10 mb-12">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-4xl font-bold flex items-center gap-4">
@@ -276,7 +287,7 @@ export default function RepairDetail() {
           )}
         </div>
 
-        {/* Dịch vụ – chỉ admin thấy nút thêm */}
+        {/* Dịch vụ */}
         <div className="bg-white rounded-3xl shadow-2xl p-10 mb-12">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-4xl font-bold flex items-center gap-4">
@@ -377,7 +388,6 @@ export default function RepairDetail() {
                 </span>
               </p>
 
-              {/* KHÁCH HÀNG: Chỉ thanh toán bằng QR */}
               {isCustomer && repair.thanhToanStatus !== "Đã thanh toán" && (
                 <button
                   onClick={handleGetQR}
@@ -388,7 +398,6 @@ export default function RepairDetail() {
                 </button>
               )}
 
-              {/* ADMIN: Có cả tiền mặt + xác nhận thủ công */}
               {isStaff && repair.thanhToanStatus !== "Đã thanh toán" && (
                 <button
                   onClick={() => setShowPaymentModal(true)}
@@ -450,26 +459,40 @@ export default function RepairDetail() {
           </div>
         )}
 
-        {/* Modal thêm phụ tùng */}
+        {/* Modal thêm phụ tùng – DROPDOWN TỪ DB */}
         {isStaff && showAddPart && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6">
             <div className="bg-white rounded-3xl shadow-2xl p-12 w-full max-w-2xl">
               <h2 className="text-5xl font-bold text-center mb-12 text-purple-600">Thêm Phụ Tùng</h2>
               <div className="grid grid-cols-2 gap-10">
-                <input
-                  placeholder="Mã phụ tùng (VD: PT001)"
-                  value={newPart.maPT}
-                  onChange={(e) => setNewPart({ ...newPart, maPT: e.target.value.toUpperCase() })}
-                  className="px-8 py-6 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-purple-300 font-mono"
-                />
-                <input
-                  type="number"
-                  placeholder="Số lượng"
-                  min="1"
-                  value={newPart.soLuong}
-                  onChange={(e) => setNewPart({ ...newPart, soLuong: Number(e.target.value) || 1 })}
-                  className="px-8 py-6 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-purple-300"
-                />
+                {/* Dropdown phụ tùng từ database */}
+                <div className="space-y-3">
+                  <label className="block text-xl font-medium text-gray-700">Phụ tùng *</label>
+                  <select
+                    value={newPart.maPT}
+                    onChange={(e) => setNewPart({ ...newPart, maPT: e.target.value })}
+                    className="w-full px-6 py-5 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-purple-300 outline-none"
+                    required
+                  >
+                    <option value="">-- Chọn phụ tùng --</option>
+                    {allParts.map((pt) => (
+                      <option key={pt.maPT} value={pt.maPT}>
+                        {pt.maPT} - {pt.tenPT} ({pt.donGia?.toLocaleString()}đ)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="block text-xl font-medium text-gray-700">Số lượng</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newPart.soLuong}
+                    onChange={(e) => setNewPart({ ...newPart, soLuong: Number(e.target.value) || 1 })}
+                    className="w-full px-6 py-5 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-purple-300 outline-none"
+                  />
+                </div>
               </div>
               <div className="flex justify-center gap-10 mt-16">
                 <button
@@ -489,26 +512,40 @@ export default function RepairDetail() {
           </div>
         )}
 
-        {/* Modal thêm dịch vụ */}
-        {isStaff &&showAddService && (
+        {/* Modal thêm dịch vụ – DROPDOWN TỪ DB */}
+        {isStaff && showAddService && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-6">
             <div className="bg-white rounded-3xl shadow-2xl p-12 w-full max-w-2xl">
               <h2 className="text-5xl font-bold text-center mb-12 text-indigo-600">Thêm Dịch Vụ</h2>
               <div className="grid grid-cols-2 gap-10">
-                <input
-                  placeholder="Mã dịch vụ (VD: DV001)"
-                  value={newService.maDV}
-                  onChange={(e) => setNewService({ ...newService, maDV: e.target.value.toUpperCase() })}
-                  className="px-8 py-6 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-indigo-300 font-mono"
-                />
-                <input
-                  type="number"
-                  placeholder="Số lượng"
-                  min="1"
-                  value={newService.soLuong}
-                  onChange={(e) => setNewService({ ...newService, soLuong: Number(e.target.value) || 1 })}
-                  className="px-8 py-6 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-indigo-300"
-                />
+                {/* Dropdown dịch vụ từ database */}
+                <div className="space-y-3">
+                  <label className="block text-xl font-medium text-gray-700">Dịch vụ *</label>
+                  <select
+                    value={newService.maDV}
+                    onChange={(e) => setNewService({ ...newService, maDV: e.target.value })}
+                    className="w-full px-6 py-5 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-indigo-300 outline-none"
+                    required
+                  >
+                    <option value="">-- Chọn dịch vụ --</option>
+                    {allServices.map((dv) => (
+                      <option key={dv.maDV} value={dv.maDV}>
+                        {dv.maDV} - {dv.tenDV} ({dv.giaTien?.toLocaleString()}đ)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="block text-xl font-medium text-gray-700">Số lượng</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newService.soLuong}
+                    onChange={(e) => setNewService({ ...newService, soLuong: Number(e.target.value) || 1 })}
+                    className="w-full px-6 py-5 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-indigo-300 outline-none"
+                  />
+                </div>
               </div>
               <div className="flex justify-center gap-10 mt-16">
                 <button

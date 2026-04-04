@@ -13,7 +13,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const API = "http://localhost:8080/admin/branches";
+const API = "/admin/branches";
 const PAGE_SIZE = 10;
 
 export default function BranchManager() {

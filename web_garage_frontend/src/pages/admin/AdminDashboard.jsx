@@ -25,12 +25,15 @@ export default function AdminDashboard() {
         const today = new Date().toISOString().split("T")[0];
 
         const [bookingsRes, repairsRes, partsRes] = await Promise.all([
+          // Lịch hẹn hôm nay
           axiosInstance.get("/admin/bookings", {
             params: { dateFrom: today, dateTo: today, size: 1 },
           }),
+          // Chỉ lấy phiếu "Đang sửa" (không tính "Hoàn thành" hay trạng thái khác)
           axiosInstance.get("/admin/repairs", {
             params: { trangThai: "Đang sửa", size: 1 },
           }),
+          // Phụ tùng sắp hết
           axiosInstance.get("/admin/parts", {
             params: { stockUnder: lowStockThreshold, size: 1 },
           }),
@@ -43,6 +46,7 @@ export default function AdminDashboard() {
         });
       } catch (error) {
         console.error("Lỗi tải thống kê:", error);
+        setMessage("❌ Lỗi tải dữ liệu thống kê: " + (error.response?.data?.message || error.message));
         setStats({ todayBookings: 0, ongoingRepairs: 0, lowStockParts: 0 });
       } finally {
         setStatsLoading(false);
@@ -70,7 +74,7 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div>
+    <div className="p-6">
       {/* 3 ô thống kê */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         {statsLoading ? (
@@ -92,7 +96,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Đang sửa chữa */}
+            {/* Đang sửa chữa – CHỈ TÍNH "ĐANG SỬA", KHÔNG TÍNH "HOÀN THÀNH" */}
             <div className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all">
               <div className="flex items-center justify-between">
                 <div>
@@ -105,7 +109,7 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* Phụ tùng sắp hết - có thể chỉnh ngưỡng ngay trên giao diện */}
+            {/* Phụ tùng sắp hết */}
             <div className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all">
               <div className="flex items-center justify-between">
                 <div className="flex-1">

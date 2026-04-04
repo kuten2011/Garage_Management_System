@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance"; 
 import { Plus, Search, DollarSign, Edit3, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 
-const API = "http://localhost:8080/admin/services";
+const API = "/admin/services";
 const PAGE_SIZE = 10;
 
 export default function ServiceManager() {

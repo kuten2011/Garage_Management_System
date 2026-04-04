@@ -16,7 +16,7 @@ import {
   X,
 } from "lucide-react";
 
-const API_BASE = "http://localhost:8080/admin";
+const API_BASE = "/admin";
 const PAGE_SIZE = 10;
 
 const addSchema = z.object({

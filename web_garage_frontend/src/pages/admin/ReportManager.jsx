@@ -3,7 +3,7 @@ import axiosInstance from "../../api/axiosInstance";
 import { TrendingUp, DollarSign, Car, Wrench, Calendar, Building } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
-const API = "http://localhost:8080/admin/reports";
+const API = "/admin/reports";
 
 export default function ReportManager() {
   const [allReports, setAllReports] = useState([]); // Lưu tất cả báo cáo từ backend

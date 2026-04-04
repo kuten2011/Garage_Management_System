@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Phone, Mail, Lock, MapPin, AlertCircle } from "lucide-react";
 
-const API_REGISTER = "http://localhost:8080/web_garage/auth/register";
+const API_REGISTER = "/web_garage/auth/register";
 
 export default function RegisterPage() {
   const navigate = useNavigate();

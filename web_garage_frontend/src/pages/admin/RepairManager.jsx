@@ -16,10 +16,11 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const API_BASE = "http://localhost:8080/admin";
+const API_BASE = "/admin";
 const API = `${API_BASE}/repairs`;
-const BOOKING_API = `${API_BASE}/bookings`; // API lấy lịch hẹn
-const EMPLOYEE_API = `${API_BASE}/employees`; // API lấy nhân viên
+const BOOKING_API = `${API_BASE}/bookings`;
+const EMPLOYEE_API = `${API_BASE}/employees`;
+const VEHICLE_API = `${API_BASE}/vehicles`; // API lấy tất cả xe từ database
 const PAGE_SIZE = 10;
 
 export default function RepairManager() {
@@ -34,6 +35,7 @@ export default function RepairManager() {
   // Dữ liệu dropdown
   const [bookings, setBookings] = useState([]); // Lịch hẹn
   const [employees, setEmployees] = useState({}); // maNV → hoTen
+  const [vehicles, setVehicles] = useState([]); // Danh sách xe từ DB (bienSo)
 
   const [formData, setFormData] = useState({
     maLich: "",
@@ -44,25 +46,28 @@ export default function RepairManager() {
     bienSo: "",
   });
 
-  // Load nhân viên và lịch hẹn ngay khi component mount (không chờ mở form)
+  // Load nhân viên, lịch hẹn và xe từ database ngay khi component mount
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const [bookingRes, employeeRes] = await Promise.all([
+        const [bookingRes, employeeRes, vehicleRes] = await Promise.all([
           axiosInstance.get(BOOKING_API),
           axiosInstance.get(EMPLOYEE_API),
+          axiosInstance.get(VEHICLE_API), // Lấy tất cả xe
         ]);
 
-        // Lịch hẹn
         const bookingList = bookingRes.data.content || bookingRes.data || [];
         setBookings(bookingList);
 
-        // Nhân viên
         const empMap = {};
         (employeeRes.data.content || employeeRes.data || []).forEach((emp) => {
           empMap[emp.maNV] = emp.hoTen || "Không tên";
         });
         setEmployees(empMap);
+
+        // Xe từ DB
+        const vehicleList = vehicleRes.data.content || vehicleRes.data || [];
+        setVehicles(vehicleList);
       } catch (err) {
         console.error("Lỗi tải dữ liệu dropdown:", err);
       }
@@ -159,7 +164,7 @@ export default function RepairManager() {
 
   const handleSave = async () => {
     if (!formData.maLich.trim()) return alert("Vui lòng chọn mã lịch hẹn!");
-    if (!formData.bienSo.trim()) return alert("Vui lòng nhập biển số xe!");
+    if (!formData.bienSo.trim()) return alert("Vui lòng chọn biển số xe!");
 
     try {
       if (editingItem) {
@@ -340,7 +345,7 @@ export default function RepairManager() {
           )}
         </div>
 
-        {/* POPUP THÊM/SỬA – HOÀN HẢO VỚI DROPDOWN TỪ DB */}
+        {/* POPUP THÊM/SỬA – BIỂN SỐ XE LẤY TỪ DATABASE */}
         {showForm && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-xl">
@@ -392,13 +397,23 @@ export default function RepairManager() {
                   </select>
                 </div>
 
-                <input
-                  placeholder="Biển số xe (VD: 59A1-12345) *"
-                  value={formData.bienSo}
-                  onChange={(e) => setFormData({ ...formData, bienSo: e.target.value.toUpperCase() })}
-                  className="px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm font-mono"
-                  required
-                />
+                {/* Dropdown biển số xe – LẤY TỪ DATABASE */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Biển số xe *</label>
+                  <select
+                    value={formData.bienSo}
+                    onChange={(e) => setFormData({ ...formData, bienSo: e.target.value })}
+                    className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm font-mono"
+                    required
+                  >
+                    <option value="">-- Chọn biển số xe --</option>
+                    {vehicles.map((vehicle) => (
+                      <option key={vehicle.bienSo} value={vehicle.bienSo}>
+                        {vehicle.bienSo} - {vehicle.mauXe || "Xe không xác định"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 <input
                   type="date"

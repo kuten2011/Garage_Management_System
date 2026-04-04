@@ -6,7 +6,7 @@ import {
   ArrowUpDown, Upload, X, Image
 } from "lucide-react";
 
-const API = "http://localhost:8080/admin/parts";
+const API = "/admin/parts";
 const PAGE_SIZE = 10;
 
 export default function PartManager() {

@@ -14,9 +14,9 @@ public class GeminiConfig {
     private String model;
 
     @Bean
-    public WebClient webClient() {
-        return WebClient.builder()
-                .baseUrl("https://generativelanguage.googleapis.com/v1beta/models")
+    public WebClient geminiWebClient(WebClient.Builder builder, GeminiConfig config) {
+        return builder
+                .baseUrl("https://generativelanguage.googleapis.com/v1beta")   // ← Phải có /v1beta
                 .build();
     }
 }

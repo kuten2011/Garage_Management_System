@@ -13,7 +13,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 
-const BASE_API = "http://localhost:8080/customer";
+const BASE_API = "/customer";
 const REPAIR_API = `${BASE_API}/repairs`;
 const FEEDBACK_API = `${BASE_API}/feedbacks`;
 

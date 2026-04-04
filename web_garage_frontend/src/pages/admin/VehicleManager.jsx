@@ -14,8 +14,8 @@ import {
   Shield,
 } from "lucide-react";
 
-const API = "http://localhost:8080/admin/vehicles";
-const CUSTOMER_API = "http://localhost:8080/admin/customers";
+const API = "/admin/vehicles";
+const CUSTOMER_API = "/admin/customers";
 const PAGE_SIZE = 10;
 
 // Danh sách hãng xe phổ biến

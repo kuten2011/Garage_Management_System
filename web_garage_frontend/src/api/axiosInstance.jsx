@@ -1,13 +1,13 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: `http://${window.location.hostname}:8080`,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Tự động thêm Bearer token vào mọi request nếu có
+// Tự động thêm token
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -19,15 +19,15 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Xử lý lỗi 401 → tự động logout
+// Xử lý 401
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      window.location.href = "/login"; // Hoặc dùng navigate nếu trong component
-      alert("Phiên đăng nhập hết hạn! Vui lòng đăng nhập lại.");
+      window.location.href = "/login";
+      alert("Phiên đăng nhập hết hạn!");
     }
     return Promise.reject(error);
   }

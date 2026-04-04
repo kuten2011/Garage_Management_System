@@ -63,25 +63,30 @@ public class GeminiService {
     }
 
     public Mono<float[]> generateEmbeddingAsync(String text) {
-        String url = "/text-embedding-004:embedContent?key=" + geminiConfig.getApiKey();
-        Map<String, Object> request = buildEmbeddingRequest(text);
+        String modelName = "gemini-embedding-001";   // hoặc "gemini-embedding-2-preview" nếu muốn thử model mới
+
+        // SỬA Ở ĐÂY: Không được có "models/" thừa trước modelName
+        String url = "/models/" + modelName + ":embedContent?key=" + geminiConfig.getApiKey();
+
+        Map<String, Object> requestBody = Map.of(
+                "content", Map.of(
+                        "parts", List.of(Map.of("text", sanitizeInput(text)))
+                )
+                // Nếu muốn vector ngắn hơn để tiết kiệm bộ nhớ (khuyến nghị):
+                // ,"outputDimensionality", 1536   // hoặc 768
+        );
 
         return webClient.post()
                 .uri(url)
                 .header("Content-Type", "application/json")
-                .bodyValue(request)
+                .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(String.class)
                 .retryWhen(Retry.backoff(3, Duration.ofSeconds(1))
-                        .filter(this::isRetryableError)
-                        .doBeforeRetry(signal ->
-                                log.warn("Retrying embedding request, attempt: {}", signal.totalRetries() + 1)))
+                        .filter(this::isRetryableError))
                 .map(this::parseEmbeddingResponse)
-                .doOnError(e -> log.error("Error generating embedding: {}", e.getMessage()))
-                .onErrorResume(WebClientResponseException.class, e -> {
-                    log.error("API error: status={}, body={}", e.getStatusCode(), e.getResponseBodyAsString());
-                    return Mono.error(new RuntimeException("Gemini API error: " + e.getMessage()));
-                });
+                .doOnError(e -> log.error("Error generating embedding for text (length {}): {}",
+                        text.length(), e.getMessage(), e));
     }
 
     public String generateText(String prompt, String context) {
@@ -219,6 +224,10 @@ public class GeminiService {
         if (embedding == null) {
             throw new IllegalStateException("Embedding is null");
         }
+        if (embedding.length != 768 && embedding.length != 1536 && embedding.length != 3072) {
+            log.warn("Embedding dimension lạ: {}", embedding.length);
+        }
+
         if (embedding.length != EMBEDDING_DIMENSION) {
             throw new IllegalStateException(
                     String.format("Invalid embedding dimension: expected %d, got %d",

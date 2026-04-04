@@ -36,6 +36,7 @@ export default function CustomerManager() {
     email: "",
     diaChi: "",
     matKhau: "",
+    confirmMatKhau: "", // thêm dòng này
   });
   const [processing, setProcessing] = useState(false);
 
@@ -67,17 +68,17 @@ export default function CustomerManager() {
     let filtered = customers;
     if (filters.maKH)
       filtered = filtered.filter((c) =>
-        c.maKH.toLowerCase().includes(filters.maKH.toLowerCase())
+        c.maKH.toLowerCase().includes(filters.maKH.toLowerCase()),
       );
     if (filters.hoTen)
       filtered = filtered.filter((c) =>
-        c.hoTen.toLowerCase().includes(filters.hoTen.toLowerCase())
+        c.hoTen.toLowerCase().includes(filters.hoTen.toLowerCase()),
       );
     if (filters.sdt)
       filtered = filtered.filter((c) => c.sdt?.includes(filters.sdt));
     if (filters.email)
       filtered = filtered.filter((c) =>
-        c.email.toLowerCase().includes(filters.email.toLowerCase())
+        c.email.toLowerCase().includes(filters.email.toLowerCase()),
       );
     setFilteredCustomers(filtered);
   }, [filters, customers]);
@@ -126,13 +127,24 @@ export default function CustomerManager() {
         // PUT /admin/customers/{maKH}
         await axiosInstance.put(
           `/admin/customers/${currentCustomer.maKH}`,
-          currentCustomer
+          currentCustomer,
         );
         alert("Cập nhật khách hàng thành công!");
       } else {
-        // POST /admin/customers
-        await axiosInstance.post("/admin/customers", currentCustomer);
-        alert("Thêm khách hàng thành công! Mã KH được sinh tự động.");
+        // POST /web_garage/auth/register
+        //backend cần confirm
+        // forntend ở tạo cũng cần
+        // check confirm trước
+        if (currentCustomer.matKhau !== currentCustomer.confirmMatKhau) {
+          alert("Mật khẩu xác nhận không khớp!");
+          return;
+        }
+
+        // loại bỏ trước khi gửi
+        const { maKH, confirmMatKhau, ...dataToSend } = currentCustomer;
+
+        await axiosInstance.post("/web_garage/auth/register", dataToSend);
+        alert("Thêm khách hàng thành công!");
       }
       setShowModal(false);
       fetchCustomers();
@@ -147,7 +159,7 @@ export default function CustomerManager() {
   const handleDelete = async (maKH, hoTen) => {
     if (
       !window.confirm(
-        `Xóa khách hàng "${hoTen}" (Mã: ${maKH})?\nCẩn thận: sẽ xóa cả xe liên quan!`
+        `Xóa khách hàng "${hoTen}" (Mã: ${maKH})?\nCẩn thận: sẽ xóa cả xe liên quan!`,
       )
     ) {
       return;
@@ -368,18 +380,33 @@ export default function CustomerManager() {
               />
 
               {!isEditMode && (
-                <input
-                  type="password"
-                  placeholder="Mật khẩu *"
-                  value={currentCustomer.matKhau}
-                  onChange={(e) =>
-                    setCurrentCustomer({
-                      ...currentCustomer,
-                      matKhau: e.target.value,
-                    })
-                  }
-                  className="px-6 py-5 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-green-300 col-span-2"
-                />
+                <>
+                  <input
+                    type="password"
+                    placeholder="Mật khẩu *"
+                    value={currentCustomer.matKhau}
+                    onChange={(e) =>
+                      setCurrentCustomer({
+                        ...currentCustomer,
+                        matKhau: e.target.value,
+                      })
+                    }
+                    className="px-6 py-5 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-green-300 col-span-2"
+                  />
+
+                  <input
+                    type="password"
+                    placeholder="Xác nhận mật khẩu *"
+                    value={currentCustomer.confirmMatKhau}
+                    onChange={(e) =>
+                      setCurrentCustomer({
+                        ...currentCustomer,
+                        confirmMatKhau: e.target.value,
+                      })
+                    }
+                    className="px-6 py-5 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-green-300 col-span-2"
+                  />
+                </>
               )}
             </div>
 
@@ -398,8 +425,8 @@ export default function CustomerManager() {
                 {processing
                   ? "Đang lưu..."
                   : isEditMode
-                  ? "Cập nhật"
-                  : "Thêm khách hàng"}
+                    ? "Cập nhật"
+                    : "Thêm khách hàng"}
               </button>
             </div>
           </div>

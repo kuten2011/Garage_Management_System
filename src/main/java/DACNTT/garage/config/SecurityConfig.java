@@ -53,6 +53,10 @@ public class SecurityConfig {
                         // các route admin còn lại → phải ADMIN
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
+                        .requestMatchers("/admin/bookings", "/admin/repairs", "/admin/parts", "/admin/services", "/admin/vehicles", "/admin/feedbacks").hasRole("EMPLOYEE")
+
+                        .requestMatchers("/admin/employees", "/admin/customers", "/admin/vehicles", "/admin/branches", "/admin/feedbacks", "/admin/reports").hasRole("MANAGER")
+
                         .anyRequest().authenticated()
                 )
 

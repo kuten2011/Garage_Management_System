@@ -13,7 +13,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-const API = "http://localhost:8080/admin/feedbacks";
+const API = "/admin/feedbacks";
 const PAGE_SIZE = 10;
 
 export default function FeedbackManager() {
