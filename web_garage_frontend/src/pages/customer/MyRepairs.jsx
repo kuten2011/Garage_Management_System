@@ -36,7 +36,13 @@ export default function MyRepairs() {
       try {
         setLoading(true);
         const res = await axiosInstance.get(REPAIR_API);
-        setRepairs(res.data.content || res.data || []);
+        const raw = res.data;
+        const list = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.content)
+            ? raw.content
+            : [];
+        setRepairs(list);
       } catch (err) {
         alert("Không thể tải phiếu sửa chữa của bạn!");
       } finally {
@@ -64,7 +70,13 @@ export default function MyRepairs() {
 
       // Refresh để cập nhật ngay
       const res = await axiosInstance.get(REPAIR_API);
-      setRepairs(res.data.content || res.data || []);
+      const raw = res.data;
+      const list = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw?.content)
+          ? raw.content
+          : [];
+      setRepairs(list);
     } catch (err) {
       alert("Gửi phản hồi thất bại!");
     }
@@ -93,7 +105,9 @@ export default function MyRepairs() {
           <Star
             key={i}
             size={size}
-            className={i <= soSao ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}
+            className={
+              i <= soSao ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
+            }
           />
         ))}
       </div>
@@ -104,8 +118,12 @@ export default function MyRepairs() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-3xl font-bold mb-4">Vui lòng đăng nhập để xem phiếu sửa chữa</h2>
-          <Link to="/login" className="text-indigo-600 underline text-xl">Đăng nhập ngay</Link>
+          <h2 className="text-3xl font-bold mb-4">
+            Vui lòng đăng nhập để xem phiếu sửa chữa
+          </h2>
+          <Link to="/login" className="text-indigo-600 underline text-xl">
+            Đăng nhập ngay
+          </Link>
         </div>
       </div>
     );
@@ -115,14 +133,16 @@ export default function MyRepairs() {
     <div className="min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-center mb-4 text-gray-800">
-          Phiếu Sửa Chữa Của Bạn 
+          Phiếu Sửa Chữa Của Bạn
         </h1>
         <p className="text-center text-gray-600 mb-12">
           Theo dõi trạng thái và đánh giá dịch vụ
         </p>
 
         {loading ? (
-          <div className="text-center py-20 text-2xl text-gray-500">Đang tải phiếu...</div>
+          <div className="text-center py-20 text-2xl text-gray-500">
+            Đang tải phiếu...
+          </div>
         ) : repairs.length === 0 ? (
           <div className="text-center py-20 text-2xl text-gray-500">
             Bạn chưa có phiếu sửa chữa nào
@@ -131,7 +151,9 @@ export default function MyRepairs() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {repairs.map((r) => {
               const hasFeedback = r.daDanhGia;
-              const trangThaiPhanHoi = r.phanHoiQL ? "Đã phản hồi" : "Chưa phản hồi";
+              const trangThaiPhanHoi = r.phanHoiQL
+                ? "Đã phản hồi"
+                : "Chưa phản hồi";
 
               return (
                 <div
@@ -139,14 +161,16 @@ export default function MyRepairs() {
                   className="bg-white rounded-3xl shadow-xl p-8 hover:shadow-2xl transition transform hover:-translate-y-1"
                 >
                   <div className="flex justify-between items-start mb-6">
-                    <h3 className="text-2xl font-bold text-indigo-700">{r.maPhieu}</h3>
+                    <h3 className="text-2xl font-bold text-indigo-700">
+                      {r.maPhieu}
+                    </h3>
                     <span
                       className={`px-4 py-2 rounded-full text-sm font-bold ${
                         r.trangThai === "Hoàn thành"
                           ? "bg-green-100 text-green-800"
                           : r.trangThai === "Đang sửa"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-orange-100 text-orange-800"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-orange-100 text-orange-800"
                       }`}
                     >
                       {r.trangThai}
@@ -156,7 +180,9 @@ export default function MyRepairs() {
                   <div className="space-y-4 text-gray-700 mb-6">
                     <div className="flex items-center gap-3">
                       <Car size={22} className="text-purple-600" />
-                      <span className="font-medium font-mono">{r.xe?.bienSo || "Chưa có"}</span>
+                      <span className="font-medium font-mono">
+                        {r.xe?.bienSo || "Chưa có"}
+                      </span>
                     </div>
                     <div className="flex items-center gap-3">
                       <CalendarDays size={22} className="text-indigo-600" />
@@ -189,11 +215,18 @@ export default function MyRepairs() {
                           {trangThaiPhanHoi === "Đã phản hồi" ? (
                             <CheckCircle size={26} className="text-green-600" />
                           ) : (
-                            <AlertCircle size={26} className="text-yellow-600" />
+                            <AlertCircle
+                              size={26}
+                              className="text-yellow-600"
+                            />
                           )}
-                          <span className={`font-bold text-lg ${
-                            trangThaiPhanHoi === "Đã phản hồi" ? "text-green-800" : "text-yellow-800"
-                          }`}>
+                          <span
+                            className={`font-bold text-lg ${
+                              trangThaiPhanHoi === "Đã phản hồi"
+                                ? "text-green-800"
+                                : "text-yellow-800"
+                            }`}
+                          >
                             {trangThaiPhanHoi}
                           </span>
                         </div>
@@ -201,11 +234,15 @@ export default function MyRepairs() {
                         <div className="flex items-center gap-3 mb-2">
                           <span className="font-medium">Đánh giá:</span>
                           {renderStars(r.soSao, 26)}
-                          <span className="font-bold text-lg ml-2">{r.soSao}/5</span>
+                          <span className="font-bold text-lg ml-2">
+                            {r.soSao}/5
+                          </span>
                         </div>
 
                         {r.noiDungPhanHoi && (
-                          <p className="text-gray-700 italic truncate mt-2">"{r.noiDungPhanHoi}"</p>
+                          <p className="text-gray-700 italic truncate mt-2">
+                            "{r.noiDungPhanHoi}"
+                          </p>
                         )}
 
                         {r.phanHoiQL && (
@@ -221,7 +258,9 @@ export default function MyRepairs() {
                       >
                         <div className="flex items-center justify-center gap-3 mb-3">
                           <AlertCircle size={26} className="text-orange-600" />
-                          <span className="font-bold text-orange-800 text-lg">Chưa đánh giá</span>
+                          <span className="font-bold text-orange-800 text-lg">
+                            Chưa đánh giá
+                          </span>
                         </div>
                         <span className="text-orange-700 font-medium">
                           Gửi đánh giá & phản hồi ngay
@@ -260,10 +299,12 @@ export default function MyRepairs() {
             </div>
 
             <div className="bg-gray-50 p-6 rounded-2xl mb-8">
-              <p className="font-bold text-lg mb-2">Mã phiếu: {selectedRepair.maPhieu}</p>
+              <p className="font-bold text-lg mb-2">
+                Mã phiếu: {selectedRepair.maPhieu}
+              </p>
               <p className="text-gray-600">
                 <Car className="inline mr-2" size={18} />
-                Ngày đánh giá: {repairs.ngayGui || "-"}
+                Ngày đánh giá: {selectedRepair.ngayGui || "-"}
               </p>
             </div>
 
@@ -274,17 +315,25 @@ export default function MyRepairs() {
                   <div className="flex justify-center gap-4 mb-4">
                     {renderStars(rating, 48)}
                   </div>
-                  <p className="text-3xl font-bold text-yellow-500">{rating}/5 sao</p>
+                  <p className="text-3xl font-bold text-yellow-500">
+                    {rating}/5 sao
+                  </p>
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl border-2 border-gray-200 mb-6">
-                  <p className="text-gray-700 italic text-lg">"{feedbackText}"</p>
+                  <p className="text-gray-700 italic text-lg">
+                    "{feedbackText}"
+                  </p>
                 </div>
 
                 {selectedRepair.phanHoiQL && (
                   <div className="bg-indigo-50 p-6 rounded-2xl border-2 border-indigo-200">
-                    <p className="font-bold text-indigo-800 mb-2 text-lg">Phản hồi từ garage:</p>
-                    <p className="text-indigo-700 text-lg">{selectedRepair.phanHoiQL}</p>
+                    <p className="font-bold text-indigo-800 mb-2 text-lg">
+                      Phản hồi từ garage:
+                    </p>
+                    <p className="text-indigo-700 text-lg">
+                      {selectedRepair.phanHoiQL}
+                    </p>
                   </div>
                 )}
               </>

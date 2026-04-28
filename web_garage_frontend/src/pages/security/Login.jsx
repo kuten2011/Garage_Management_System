@@ -1,14 +1,14 @@
 // src/security/AdminLogin.jsx (đã chỉnh sửa hoàn chỉnh)
 import React, { useState } from "react";
-import axios from "axios";
-import { useNavigate, Link } from "react-router-dom"; // Thêm Link để tạo link đúng cách
+import axiosInstance from "../../api/axiosInstance";
+import { useNavigate, Link } from "react-router-dom"; 
 import { LogIn, AlertCircle } from "lucide-react";
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState("admin@gara.com"); // Để test admin
-  // const [email, setEmail] = useState(""); // Nếu muốn để trống
-  const [password, setPassword] = useState("123456");
-  // const [password, setPassword] = useState("");
+  //const [email, setEmail] = useState("admin@gara.com");
+  const [email, setEmail] = useState(""); // Nếu muốn để trống
+  //const [password, setPassword] = useState("123456");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      const res = await axios.post(
+      const res = await axiosInstance.post(
         "/web_garage/auth/login",
         { email, password },
         {
@@ -30,9 +30,6 @@ export default function AdminLogin() {
       // Lưu token và thông tin user
       localStorage.setItem("token", res.data.jwt);
       localStorage.setItem("user", JSON.stringify(res.data));
-
-      console.log("Đăng nhập thành công! Token:", res.data.jwt);
-      console.log("Authorities:", res.data.authorities);
 
       // Lấy roles từ authorities
       const authorities = res.data.authorities || [];

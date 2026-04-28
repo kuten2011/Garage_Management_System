@@ -11,6 +11,7 @@ import {
   Filter,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../api/axiosInstance"; 
 
 const API = "/admin/parts";
 const DEFAULT_IMAGE = "https://placehold.net/400x400.png";
@@ -76,8 +77,8 @@ export default function PartsPage() {
       if (stockFrom) params.append("stockFrom", stockFrom);
       if (stockTo) params.append("stockTo", stockTo);
 
-      const res = await fetch(`${API}?${params}`);
-      const result = await res.json();
+      const res = await axiosInstance.get(`${API}?${params}`);
+      const result = res.data;
       console.log("API Response:", result); // Debug
       setData(result);
     } catch (err) {

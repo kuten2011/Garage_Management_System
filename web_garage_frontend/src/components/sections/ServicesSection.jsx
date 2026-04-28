@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Wrench, Star, Clock, Sparkles } from "lucide-react";
+import axiosInstance from "../../api/axiosInstance";
 
-const API = `http://${window.location.hostname}:8080/admin/services`;
+const API = `/admin/services`;
 
 export default function ServicesSection({ onViewAllServices }) {
   const [services, setServices] = useState([]);
@@ -16,8 +17,8 @@ export default function ServicesSection({ onViewAllServices }) {
   const fetchServices = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}?page=0&size=8`);
-      const result = await res.json();
+      const res = await axiosInstance.get(`${API}?page=0&size=8`);
+      const result = res.data;
       setServices(result.content || []);
     } catch (err) {
       console.error("Lỗi tải dịch vụ:", err);

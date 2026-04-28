@@ -37,23 +37,33 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
-        System.out.println("bbbbbbbbbbbb");
-        System.out.println("Email: " + loginRequest.getEmail());
-        System.out.println("Password gửi lên: " + loginRequest.getPassword());
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()
+                    )
+            );
 
-        String hash = passwordEncoder.encode("123456");
-        System.out.println("Hash của '123456': " + hash);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
-        System.out.println("aaaaaaaaaaaaaa");
+            String jwt = jwtUtils.generateJwtToken(
+                    (UserDetailsImpl) authentication.getPrincipal()
+            );
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken((UserDetailsImpl) authentication.getPrincipal());
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            return ResponseEntity.ok(new JwtResponse(
+                    jwt,
+                    userDetails.getUsername(),
+                    userDetails.getAuthorities()
+            ));
 
-        return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername(), userDetails.getAuthorities()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(401)
+                    .body("Login failed: " + e.getMessage());
+        }
     }
 
     @PostMapping("/register")

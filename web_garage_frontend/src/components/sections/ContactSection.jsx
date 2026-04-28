@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance"; 
 
-const API_BASE = `http://${window.location.hostname}:8080/customer`;
+const API_BASE = `/customer`;
 
 export default function ContactSection() {
   const navigate = useNavigate();

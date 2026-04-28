@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Package, Star, Clock } from "lucide-react";
+import axiosInstance from "../../api/axiosInstance";
 
-const API = `http://${window.location.hostname}:8080/admin/parts`;
+const API = `/admin/parts`;
 const DEFAULT_PART_IMAGE = "https://placehold.net/400x400.png";
 
 export default function PartsSection({ onViewAllParts }) {
@@ -17,8 +18,8 @@ export default function PartsSection({ onViewAllParts }) {
   const fetchParts = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}?page=0&size=8`);
-      const result = await res.json();
+      const res = await axiosInstance.get(`${API}?page=0&size=8`);
+      const result = res.data;
       setParts(result.content || []);
     } catch (err) {
       console.error("Lỗi tải phụ tùng:", err);

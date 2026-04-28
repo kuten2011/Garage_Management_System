@@ -4,6 +4,7 @@ import DACNTT.garage.dto.RepairPartDTO;
 import DACNTT.garage.handle.RepairPartHandle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,7 +15,16 @@ public class RepairPartController {
     @Autowired private RepairPartHandle repairPartHandle;
 
     @GetMapping("/customer/repair-parts/phieu/{maPhieu}")
-    public ResponseEntity<List<RepairPartDTO>> getPartsByPhieu(@PathVariable String maPhieu) {
+    public ResponseEntity<?> getPartsByPhieu(
+            @PathVariable String maPhieu,
+            Authentication authentication) {
+
+        String email = authentication.getName();
+
+        if (!repairPartHandle.isOwner(maPhieu, email)) {
+            return ResponseEntity.status(403).body("Không có quyền truy cập!");
+        }
+
         return repairPartHandle.getPartsByPhieu(maPhieu);
     }
 

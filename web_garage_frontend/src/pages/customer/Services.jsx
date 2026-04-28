@@ -8,13 +8,13 @@ import {
   Clock,
   Star,
   ArrowLeft,
-  X,
 } from "lucide-react";
+import axiosInstance from "../../api/axiosInstance";
 
 const API = "/admin/services";
 const PAGE_SIZE = 8;
 
-export default function ServicesPage({ onBack }) {
+export default function ServicesPage() {
   const [data, setData] = useState({ content: [], totalPages: 1 });
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -35,7 +35,6 @@ export default function ServicesPage({ onBack }) {
       setSearch(searchInput);
       setPage(0);
     }, 500);
-
     return () => clearTimeout(timer);
   }, [searchInput]);
 
@@ -46,21 +45,19 @@ export default function ServicesPage({ onBack }) {
       setPriceTo(priceToInput);
       setPage(0);
     }, 500);
-
     return () => clearTimeout(timer);
   }, [priceFromInput, priceToInput]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page, size: PAGE_SIZE });
-      if (search.trim()) params.append("search", search.trim());
-      if (priceFrom) params.append("priceFrom", priceFrom);
-      if (priceTo) params.append("priceTo", priceTo);
+      const params = { page, size: PAGE_SIZE };
+      if (search.trim()) params.search = search.trim();
+      if (priceFrom) params.priceFrom = priceFrom;
+      if (priceTo) params.priceTo = priceTo;
 
-      const res = await fetch(`${API}?${params}`);
-      const result = await res.json();
-      setData(result);
+      const res = await axiosInstance.get(API, { params });
+      setData(res.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -82,7 +79,6 @@ export default function ServicesPage({ onBack }) {
     setPage(0);
   };
 
-  // Quick price filters
   const priceRanges = [
     { label: "Dưới 100k", max: 100000 },
     { label: "100k - 500k", min: 100000, max: 500000 },
@@ -126,24 +122,20 @@ export default function ServicesPage({ onBack }) {
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Tìm kiếm theo keyword */}
             <div className="relative">
-              <div className="relative">
-                <Search
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={20}
-                />
-                <input
-                  type="text"
-                  placeholder="Tên dịch vụ..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  className="w-full pl-12 pr-12 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200 outline-none"
-                />
-              </div>
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Tên dịch vụ..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200 outline-none"
+              />
             </div>
 
-            {/* Lọc giá */}
             <div className="md:col-span-2 space-y-3">
               <div className="flex items-center gap-3">
                 <span className="text-gray-700 font-semibold">Giá:</span>
@@ -152,7 +144,7 @@ export default function ServicesPage({ onBack }) {
                   placeholder="Từ (VNĐ)"
                   value={priceFromInput}
                   onChange={(e) => setPriceFromInput(e.target.value)}
-                  className="flex-1 px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+                  className="flex-1 px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200 outline-none"
                 />
                 <span className="text-lg font-bold text-gray-600">—</span>
                 <input
@@ -160,11 +152,10 @@ export default function ServicesPage({ onBack }) {
                   placeholder="Đến (VNĐ)"
                   value={priceToInput}
                   onChange={(e) => setPriceToInput(e.target.value)}
-                  className="flex-1 px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+                  className="flex-1 px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200 outline-none"
                 />
               </div>
 
-              {/* Quick price filters */}
               <div className="flex flex-wrap gap-2">
                 {priceRanges.map((range, idx) => (
                   <button
@@ -179,7 +170,6 @@ export default function ServicesPage({ onBack }) {
             </div>
           </div>
 
-          {/* Nút xóa lọc */}
           {(searchInput || priceFromInput || priceToInput) && (
             <div className="text-center mt-6">
               <button
@@ -218,11 +208,9 @@ export default function ServicesPage({ onBack }) {
                   key={service.maDV}
                   className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
                 >
-                  {/* Card Header */}
                   <div className="h-40 bg-gradient-to-br from-gray-800 to-gray-900 relative overflow-hidden flex items-center justify-center">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-400 opacity-10 rounded-full -mr-12 -mt-12"></div>
                     <div className="absolute bottom-0 left-0 w-20 h-20 bg-yellow-400 opacity-10 rounded-full -ml-10 -mb-10"></div>
-
                     <div className="relative text-center z-10 p-4">
                       <div className="flex justify-center mb-2">
                         <Wrench className="text-yellow-400" size={32} />
@@ -231,36 +219,28 @@ export default function ServicesPage({ onBack }) {
                         {service.tenDV}
                       </h3>
                     </div>
-
                     <Star
                       size={18}
                       className="absolute top-3 right-3 text-yellow-400 fill-yellow-400"
                     />
                   </div>
 
-                  {/* Card Body */}
                   <div className="p-5">
-                    {/* Giá tiền */}
                     <div className="mb-4 bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200">
                       <div className="text-center">
-                        <p className="text-xs text-gray-600 mb-1">
-                          Giá dịch vụ
-                        </p>
+                        <p className="text-xs text-gray-600 mb-1">Giá dịch vụ</p>
                         <p className="text-xl font-black text-red-600">
                           {Number(service.giaTien).toLocaleString()}đ
                         </p>
                       </div>
                     </div>
 
-                    {/* Mô tả */}
                     <div className="mb-4">
                       <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
-                        {service.moTa ||
-                          "Dịch vụ chuyên nghiệp, đảm bảo chất lượng cao"}
+                        {service.moTa || "Dịch vụ chuyên nghiệp, đảm bảo chất lượng cao"}
                       </p>
                     </div>
 
-                    {/* Tính năng */}
                     <div className="flex items-center justify-center gap-3 mb-4 text-xs text-gray-500">
                       <div className="flex items-center gap-1">
                         <Clock size={14} className="text-yellow-600" />
@@ -272,7 +252,6 @@ export default function ServicesPage({ onBack }) {
                       </div>
                     </div>
 
-                    {/* Button */}
                     <a href="tel:0944799819">
                       <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
                         Đặt dịch vụ ngay
@@ -283,7 +262,6 @@ export default function ServicesPage({ onBack }) {
               ))}
             </div>
 
-            {/* Phân trang */}
             {data.totalPages > 1 && (
               <div className="flex justify-center items-center gap-3 mt-12 pb-8">
                 <button
@@ -309,9 +287,7 @@ export default function ServicesPage({ onBack }) {
                 ))}
 
                 <button
-                  onClick={() =>
-                    setPage((p) => Math.min(data.totalPages - 1, p + 1))
-                  }
+                  onClick={() => setPage((p) => Math.min(data.totalPages - 1, p + 1))}
                   disabled={page === data.totalPages - 1}
                   className="p-3 rounded-full bg-white shadow-lg disabled:opacity-40 hover:bg-yellow-50 transition"
                 >

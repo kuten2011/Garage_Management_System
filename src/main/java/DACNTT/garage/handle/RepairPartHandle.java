@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +22,17 @@ public class RepairPartHandle {
     @Autowired private RepairRepository repairRepository;
     @Autowired private PartRepository partRepository;
     @Autowired private RepairPartMapper repairPartMapper;
+
+    // Kiểm tra phiếu có thuộc về customer này không
+    // Repair → xe (Vehicle) → khachHang (Customer) → email
+    @Transactional (readOnly = true)
+    public boolean isOwner(String maPhieu, String email) {
+        return repairRepository.findById(maPhieu)
+                .map(phieu -> phieu.getXe() != null
+                        && phieu.getXe().getKhachHang() != null
+                        && email.equals(phieu.getXe().getKhachHang().getEmail()))
+                .orElse(false);
+    }
 
     // Lấy danh sách phụ tùng theo phiếu
     public ResponseEntity<List<RepairPartDTO>> getPartsByPhieu(String maPhieu) {

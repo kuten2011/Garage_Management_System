@@ -13,6 +13,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -35,22 +40,35 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
+    // Thêm: cho phép mọi origin (localhost + ngrok + production)
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
+                // Thêm: kích hoạt CORS với config ở trên
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/index.html", "/static/**", "/assets/**",
                                 "/css/**", "/js/**", "/img/**", "/favicon.ico").permitAll()
 
-                        // login backend
                         .requestMatchers("/web_garage/auth/**", "/chatbot/**", "/customer/**").permitAll()
 
-                        // cho phép GET parts + services nếu bạn muốn xem public
                         .requestMatchers(HttpMethod.GET, "/admin/parts/**", "/admin/services/**").permitAll()
 
-                        // các route admin còn lại → phải ADMIN
                         .requestMatchers("/admin/**").hasRole("ADMIN")
 
                         .requestMatchers("/admin/bookings", "/admin/repairs", "/admin/parts", "/admin/services", "/admin/vehicles", "/admin/feedbacks").hasRole("EMPLOYEE")
