@@ -1,7 +1,7 @@
 // src/security/AdminLogin.jsx (đã chỉnh sửa hoàn chỉnh)
 import React, { useState } from "react";
 import axiosInstance from "../../api/axiosInstance";
-import { useNavigate, Link } from "react-router-dom"; 
+import { useNavigate, Link } from "react-router-dom";
 import { LogIn, AlertCircle } from "lucide-react";
 
 export default function AdminLogin() {
@@ -24,7 +24,7 @@ export default function AdminLogin() {
         { email, password },
         {
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       // Lưu token và thông tin user
@@ -33,7 +33,9 @@ export default function AdminLogin() {
 
       // Lấy roles từ authorities
       const authorities = res.data.authorities || [];
-      const roles = authorities.map((auth) => (typeof auth === "string" ? auth : auth.authority));
+      const roles = authorities.map((auth) =>
+        typeof auth === "string" ? auth : auth.authority,
+      );
 
       // Nếu là khách hàng → về trang chủ
       if (roles.includes("ROLE_CUSTOMER")) {
@@ -45,8 +47,8 @@ export default function AdminLogin() {
       navigate("/admin", { replace: true });
     } catch (err) {
       console.error("Lỗi đăng nhập:", err);
-      if (err.response?.status === 401) {
-        setError("Sai email hoặc mật khẩu!");
+      if (err.response?.status === 401 || err.response?.status === 404) {
+        setError("Email hoặc mật khẩu không đúng!");
       } else if (err.response?.status === 403) {
         setError("Tài khoản bị khóa hoặc không có quyền truy cập!");
       } else {
@@ -65,14 +67,18 @@ export default function AdminLogin() {
           <div className="w-20 h-20 bg-yellow-400 rounded-full mx-auto mb-4 flex items-center justify-center text-gray-900 text-3xl font-bold">
             G
           </div>
-          <h2 className="text-3xl font-bold text-gray-800">ĐĂNG NHẬP HỆ THỐNG</h2>
+          <h2 className="text-3xl font-bold text-gray-800">
+            ĐĂNG NHẬP HỆ THỐNG
+          </h2>
           <p className="text-gray-600 mt-2">Garage Ô Tô Kuten</p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email
+            </label>
             <input
               type="email"
               placeholder="Nhập email của bạn"
@@ -85,7 +91,9 @@ export default function AdminLogin() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Mật khẩu</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mật khẩu
+            </label>
             <input
               type="password"
               placeholder="Nhập mật khẩu"
@@ -110,9 +118,10 @@ export default function AdminLogin() {
             type="submit"
             disabled={loading}
             className={`w-full py-4 rounded-2xl font-bold text-xl flex items-center justify-center gap-3 transition-all duration-300 shadow-lg
-              ${loading
-                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                : "bg-yellow-400 hover:bg-yellow-500 text-gray-900 hover:shadow-xl transform hover:-translate-y-1"
+              ${
+                loading
+                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                  : "bg-yellow-400 hover:bg-yellow-500 text-gray-900 hover:shadow-xl transform hover:-translate-y-1"
               }`}
           >
             <LogIn size={24} />
@@ -123,7 +132,10 @@ export default function AdminLogin() {
         {/* Link đăng ký */}
         <p className="text-center mt-8 text-gray-600">
           Chưa có tài khoản khách hàng?{" "}
-          <Link to="/register" className="text-yellow-600 font-bold hover:text-yellow-700 hover:underline">
+          <Link
+            to="/register"
+            className="text-yellow-600 font-bold hover:text-yellow-700 hover:underline"
+          >
             Đăng ký ngay
           </Link>
         </p>

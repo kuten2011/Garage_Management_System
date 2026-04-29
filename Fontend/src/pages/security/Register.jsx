@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Phone, Mail, Lock, MapPin, AlertCircle } from "lucide-react";
+import axiosInstance from "../../api/axiosInstance";
 
 const API_REGISTER = "/web_garage/auth/register";
 
@@ -34,7 +35,8 @@ export default function RegisterPage() {
     if (!formData.hoTen.trim()) newErrors.hoTen = "Vui lòng nhập họ tên";
     if (!formData.sdt.trim()) newErrors.sdt = "Vui lòng nhập số điện thoại";
     else if (!/^0[3|5|7|8|9]\d{8}$/.test(formData.sdt))
-      newErrors.sdt = "Số điện thoại không hợp lệ (10 số, bắt đầu bằng 03,05,07,08,09)";
+      newErrors.sdt =
+        "Số điện thoại không hợp lệ (10 số, bắt đầu bằng 03,05,07,08,09)";
 
     if (!formData.email.trim()) newErrors.email = "Vui lòng nhập email";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
@@ -54,44 +56,34 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
     setLoading(true);
     setServerMessage(null);
 
     try {
-      const response = await fetch(API_REGISTER, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          hoTen: formData.hoTen.trim(),
-          sdt: formData.sdt,
-          email: formData.email.toLowerCase(),
-          diaChi: formData.diaChi.trim(),
-          matKhau: formData.matKhau,
-        }),
+      const response = await axiosInstance.post("/web_garage/auth/register", {
+        hoTen: formData.hoTen.trim(),
+        sdt: formData.sdt,
+        email: formData.email.toLowerCase(),
+        diaChi: formData.diaChi.trim(),
+        matKhau: formData.matKhau,
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        setServerMessage({
-          type: "success",
-          text: "Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.",
-        });
-        setTimeout(() => navigate("/login"), 2000);
+      setServerMessage({
+        type: "success",
+        text: "Đăng ký thành công! Đang chuyển hướng...",
+      });
+      setTimeout(() => navigate("/login"), 2000);
+    } catch (err) {
+      if (err.response?.status === 409) {
+        setServerMessage({ type: "error", text: "Email đã được sử dụng!" });
       } else {
         setServerMessage({
           type: "error",
-          text: result.message || "Đăng ký thất bại. Vui lòng thử lại.",
+          text:
+            err.response?.data?.message ||
+            "Đăng ký thất bại. Vui lòng thử lại.",
         });
       }
-    } catch (err) {
-      setServerMessage({
-        type: "error",
-        text: "Lỗi kết nối server. Vui lòng kiểm tra lại mạng.",
-      });
     } finally {
       setLoading(false);
     }
@@ -105,8 +97,12 @@ export default function RegisterPage() {
           <div className="w-20 h-20 bg-yellow-400 rounded-full mx-auto mb-4 flex items-center justify-center text-gray-900 text-3xl font-bold">
             G
           </div>
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Đăng ký tài khoản</h1>
-          <p className="text-gray-600">Tham gia cùng Garage Kuten để đặt lịch dễ dàng hơn</p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+            Đăng ký tài khoản
+          </h1>
+          <p className="text-gray-600">
+            Tham gia cùng Garage Kuten để đặt lịch dễ dàng hơn
+          </p>
         </div>
 
         {/* Form */}
@@ -126,7 +122,9 @@ export default function RegisterPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                 placeholder="Nguyễn Văn A"
               />
-              {errors.hoTen && <p className="text-red-500 text-xs mt-1">{errors.hoTen}</p>}
+              {errors.hoTen && (
+                <p className="text-red-500 text-xs mt-1">{errors.hoTen}</p>
+              )}
             </div>
 
             {/* Số điện thoại */}
@@ -143,7 +141,9 @@ export default function RegisterPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                 placeholder="0901234567"
               />
-              {errors.sdt && <p className="text-red-500 text-xs mt-1">{errors.sdt}</p>}
+              {errors.sdt && (
+                <p className="text-red-500 text-xs mt-1">{errors.sdt}</p>
+              )}
             </div>
 
             {/* Email */}
@@ -160,7 +160,9 @@ export default function RegisterPage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
                 placeholder="example@gmail.com"
               />
-              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
             </div>
 
             {/* Địa chỉ (tùy chọn) */}
@@ -192,7 +194,9 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
               />
-              {errors.matKhau && <p className="text-red-500 text-xs mt-1">{errors.matKhau}</p>}
+              {errors.matKhau && (
+                <p className="text-red-500 text-xs mt-1">{errors.matKhau}</p>
+              )}
             </div>
 
             {/* Xác nhận mật khẩu */}
@@ -208,7 +212,11 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
               />
-              {errors.confirmMatKhau && <p className="text-red-500 text-xs mt-1">{errors.confirmMatKhau}</p>}
+              {errors.confirmMatKhau && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.confirmMatKhau}
+                </p>
+              )}
             </div>
 
             {/* Thông báo server */}
