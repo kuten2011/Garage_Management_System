@@ -6,6 +6,11 @@ Hệ thống quản lý dịch vụ bảo dưỡng và sửa chữa xe — Dự 
 
 🌍 **Demo:** [https://web-gara.vercel.app](https://web-gara.vercel.app)
 
+| Role | Email | Password |
+|---|---|---|
+| 👤 Khách hàng | a.nguyen@gmail.com | 123456 |
+| 🔧 Quản trị | admin@gara.com | 123456 |
+
 ---
 
 ## 📋 Giới thiệu
