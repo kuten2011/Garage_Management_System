@@ -3,20 +3,50 @@ package DACNTT.garage.service;
 import DACNTT.garage.model.Customer;
 import DACNTT.garage.model.Repair;
 import DACNTT.garage.model.Vehicle;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import jakarta.mail.internet.MimeMessage;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 @Service
 public class EmailService {
+    @Value("${brevo.api.key}")
+    private String brevoApiKey;
 
-    @Autowired
-    private JavaMailSender mailSender;
+    @Value("${brevo.sender.email}")
+    private String senderEmail;
 
+    private final WebClient webClient = WebClient.builder()
+            .baseUrl("https://api.brevo.com/v3")
+            .build();
+
+    private void sendHtmlEmail(String to, String subject, String content) {
+        try {
+            Map<String, Object> body = Map.of(
+                    "sender", Map.of("email", senderEmail, "name", "Garage Kuten"),
+                    "to", new Object[]{Map.of("email", to)},
+                    "subject", subject,
+                    "htmlContent", content
+            );
+
+            webClient.post()
+                    .uri("/smtp/email")
+                    .header("api-key", brevoApiKey)
+                    .header("Content-Type", "application/json")
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
+
+            System.out.println("Gửi mail thành công đến: " + to);
+        } catch (Exception e) {
+            System.out.println("Gửi mail thất bại đến " + to + ": " + e.getMessage());
+        }
+    }
+
+    // Giữ nguyên các method còn lại
     public void sendCareEmail(Customer khachHang, Repair repair, String templateType) {
         String subject = "";
         String content = "";
@@ -53,8 +83,7 @@ public class EmailService {
         String content = "<p>Xin chào " + khachHang.getHoTen() + ",</p>" +
                 "<p>Xe biển số <strong>" + xe.getBienSo() + "</strong> đã đến kỳ bảo dưỡng định kỳ.</p>" +
                 (overdue ? "<p style='color:red;'>Hiện tại đã quá hạn bảo dưỡng!</p>" : "") +
-                "<p>Hãy đặt lịch ngay hôm nay để đảm bảo xe luôn hoạt động tốt nhất!</p>" +
-                "<p><a href='http://localhost:3000/book-appointment'>Đặt lịch online</a></p>";
+                "<p>Hãy đặt lịch ngay hôm nay!</p>";
         sendHtmlEmail(khachHang.getEmail(), subject, content);
     }
 
@@ -62,23 +91,7 @@ public class EmailService {
         String subject = "Chúng tôi nhớ quý khách! Ưu đãi đặc biệt dành riêng cho bạn";
         String content = "<p>Kính chào " + hoTen + ",</p>" +
                 "<p>Lần cuối quý khách ghé garage là ngày " + lastVisit + ".</p>" +
-                "<p>Chúng tôi rất mong được phục vụ quý khách trở lại!</p>" +
-                "<p><strong>Ưu đãi đặc biệt: Giảm 20% dịch vụ bảo dưỡng cho khách cũ quay lại trong tháng này!</strong></p>" +
-                "<p>Hẹn gặp lại quý khách!</p>";
+                "<p><strong>Ưu đãi đặc biệt: Giảm 20% dịch vụ bảo dưỡng cho khách cũ quay lại trong tháng này!</strong></p>";
         sendHtmlEmail(email, subject, content);
-    }
-
-    private void sendHtmlEmail(String to, String subject, String content) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom("khoavo006@gmail.com", "Garage Kuten");
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(content, true); // true = HTML
-            mailSender.send(message);
-        } catch (Exception e) {
-            System.out.println("Gửi mail thất bại đến " + to + ": " + e.getMessage());
-        }
     }
 }
