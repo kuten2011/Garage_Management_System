@@ -72,6 +72,7 @@ public class EmailService {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom("khoavo006@gmail.com", "Garage Kuten");
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(content, true); // true = HTML
