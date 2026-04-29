@@ -44,7 +44,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "http://localhost:3000",
+                "https://your-react-app.up.railway.app"
+        ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
@@ -62,18 +66,22 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Public routes
                         .requestMatchers("/", "/index.html", "/static/**", "/assets/**",
                                 "/css/**", "/js/**", "/img/**", "/favicon.ico").permitAll()
-
                         .requestMatchers("/web_garage/auth/**", "/chatbot/**", "/customer/**").permitAll()
 
+                        // Cho phép GET public (phải đặt TRƯỚC rule /admin/**)
                         .requestMatchers(HttpMethod.GET, "/admin/parts/**", "/admin/services/**").permitAll()
 
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // Role cụ thể (đặt TRƯỚC rule chung /admin/**)
+                        .requestMatchers("/admin/employees/**", "/admin/customers/**",
+                                "/admin/branches/**", "/admin/reports/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers("/admin/bookings/**", "/admin/repairs/**",
+                                "/admin/feedbacks/**").hasAnyRole("ADMIN", "EMPLOYEE")
 
-                        .requestMatchers("/admin/bookings", "/admin/repairs", "/admin/parts", "/admin/services", "/admin/vehicles", "/admin/feedbacks").hasRole("EMPLOYEE")
-
-                        .requestMatchers("/admin/employees", "/admin/customers", "/admin/vehicles", "/admin/branches", "/admin/feedbacks", "/admin/reports").hasRole("MANAGER")
+                        // Rule chung nhất đặt CUỐI
+                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
 
                         .anyRequest().authenticated()
                 )
