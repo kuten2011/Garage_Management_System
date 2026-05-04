@@ -29,7 +29,7 @@ public class CustomerCareScheduler {
     private CustomerRepository customerRepository;
 
     // Chạy mỗi ngày lúc 8h sáng
-    @Scheduled(cron = "0 0 8 * * ?")
+    @Scheduled(cron = "0 0 9 * * ?", zone = "Asia/Ho_Chi_Minh")
     public void sendCustomerCareEmails() {
         LocalDate today = LocalDate.now();
 
