@@ -21,7 +21,13 @@ public class RepairPartController {
 
         String email = authentication.getName();
 
-        if (!repairPartHandle.isOwner(maPhieu, email)) {
+        // Staff truy cập được hết
+        boolean isStaff = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")
+                        || a.getAuthority().equals("ROLE_EMPLOYEE")
+                        || a.getAuthority().equals("ROLE_MANAGER"));
+
+        if (!isStaff && !repairPartHandle.isOwner(maPhieu, email)) {
             return ResponseEntity.status(403).body("Không có quyền truy cập!");
         }
 
