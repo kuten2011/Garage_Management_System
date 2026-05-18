@@ -33,12 +33,12 @@ Hệ thống hỗ trợ số hóa toàn bộ quy trình vận hành của garage
 |---|---|
 | **Backend** | Java 17, Spring Boot 3.3.6, Spring Security, Spring Data JPA |
 | **Frontend** | React, Vite, Tailwind CSS, Axios |
-| **Database** | PostgreSQL |
+| **Database** | PostgreSQL (Neon) |
 | **Auth** | JWT (JSON Web Token) |
 | **AI/Chatbot** | Google Gemini API |
 | **Storage** | Cloudinary (hình ảnh) |
 | **Mail** | Spring Mail |
-| **Deploy Backend** | Railway |
+| **Deploy Backend** | Render |
 | **Deploy Frontend** | Vercel |
 
 ---
