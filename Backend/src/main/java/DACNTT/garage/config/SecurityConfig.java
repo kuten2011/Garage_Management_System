@@ -68,7 +68,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public routes
                         .requestMatchers("/", "/index.html", "/static/**", "/assets/**",
-                                "/css/**", "/js/**", "/img/**", "/favicon.ico").permitAll()
+                                "/css/**", "/js/**", "/img/**", "/favicon.ico", "/health").permitAll()
                         .requestMatchers("/web_garage/auth/**", "/chatbot/**", "/customer/**").permitAll()
 
                         // Cho phép GET public (phải đặt TRƯỚC rule /admin/**)
