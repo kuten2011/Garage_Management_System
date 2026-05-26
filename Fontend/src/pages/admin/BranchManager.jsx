@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const API = "/admin/branches";
 const PAGE_SIZE = 10;
@@ -124,34 +125,34 @@ export default function BranchManager() {
     <div className="min-h-screen bg-gray-50 py-8 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-10 flex justify-between items-center">
-          <h1 className="text-5xl font-bold text-gray-800 flex items-center gap-5">
-            <Building className="text-indigo-600" size={56} />
+        <div className="mb-8 flex justify-between items-center gap-4">
+          <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
+            <Building className="text-indigo-600" size={40} />
             Quản Lý Chi Nhánh
           </h1>
           <button
             onClick={() => openForm()}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-3xl transition flex items-center gap-4"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition flex items-center gap-3"
           >
             <Plus size={28} /> Thêm chi nhánh mới
           </button>
         </div>
 
         {/* Bộ lọc nâng cao */}
-        <div className="bg-white rounded-3xl shadow-2xl p-10 mb-10">
-          <h3 className="text-3xl font-bold mb-8 text-gray-800 flex items-center gap-4">
-            <Search size={32} className="text-indigo-600" />
+        <CollapsibleFilter title="Bộ lọc chi nhánh" icon={Search}>
+          <h3 className="text-xl font-bold mb-5 text-gray-800 flex items-center gap-3">
+            <Search size={24} className="text-indigo-600" />
             Bộ lọc chi nhánh
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative">
               <input
                 type="text"
                 placeholder="Tên chi nhánh"
                 value={searchTen}
                 onChange={(e) => setSearchTen(e.target.value)}
-                className="w-full pl-12 pr-6 py-5 text-lg border-2 border-gray-300 rounded-2xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none"
+                className="w-full pl-12 pr-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none"
               />
               <Building
                 size={24}
@@ -165,7 +166,7 @@ export default function BranchManager() {
                 placeholder="Địa chỉ"
                 value={searchDiaChi}
                 onChange={(e) => setSearchDiaChi(e.target.value)}
-                className="w-full pl-12 pr-6 py-5 text-lg border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none"
+                className="w-full pl-12 pr-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 outline-none"
               />
               <MapPin
                 size={24}
@@ -179,7 +180,7 @@ export default function BranchManager() {
                 placeholder="Số điện thoại"
                 value={searchSdt}
                 onChange={(e) => setSearchSdt(e.target.value)}
-                className="w-full pl-12 pr-6 py-5 text-lg border-2 border-gray-300 rounded-2xl focus:border-green-500 focus:ring-4 focus:ring-green-100 outline-none font-mono"
+                className="w-full pl-12 pr-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 outline-none font-mono"
               />
               <Phone
                 size={24}
@@ -193,7 +194,7 @@ export default function BranchManager() {
                 placeholder="Email"
                 value={searchEmail}
                 onChange={(e) => setSearchEmail(e.target.value)}
-                className="w-full pl-12 pr-6 py-5 text-lg border-2 border-gray-300 rounded-2xl focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none"
+                className="w-full pl-12 pr-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none"
               />
               <Mail
                 size={24}
@@ -203,16 +204,16 @@ export default function BranchManager() {
           </div>
 
           {(searchTen || searchDiaChi || searchSdt || searchEmail) && (
-            <div className="text-center mt-8">
+            <div className="text-center mt-5">
               <button
                 onClick={resetFilters}
-                className="text-red-600 hover:text-red-800 font-bold text-xl underline"
+                className="text-red-600 hover:text-red-800 font-bold text-sm underline"
               >
                 Xóa tất cả bộ lọc
               </button>
             </div>
           )}
-        </div>
+        </CollapsibleFilter>
 
         {/* Bảng chi nhánh – ĐÃ SỬA KHÔNG LỆCH HOÀN TOÀN */}
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">

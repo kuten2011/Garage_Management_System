@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance"; 
+import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const API = "/admin/parts";
 const DEFAULT_IMAGE = "https://placehold.net/400x400.png";
@@ -151,7 +152,7 @@ export default function PartsPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Hero Banner */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-16 px-6">
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-10 sm:px-6 sm:py-16">
         <div className="max-w-7xl mx-auto">
           <button
             onClick={handleBack}
@@ -162,17 +163,17 @@ export default function PartsPage() {
           </button>
 
           <div className="text-center">
-            <h1 className="text-5xl font-bold mb-4">TẤT CẢ PHỤ TÙNG</h1>
-            <p className="text-xl opacity-90">
+            <h1 className="text-3xl sm:text-5xl font-bold mb-4">TẤT CẢ PHỤ TÙNG</h1>
+            <p className="text-base sm:text-xl opacity-90">
               Khám phá đầy đủ phụ tùng chính hãng, chất lượng cao
             </p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
         {/* Bộ lọc */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-12">
+        <CollapsibleFilter title="Tìm kiếm và lọc phụ tùng" icon={Filter} accent="yellow">
           <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-3">
             <Filter size={28} className="text-yellow-600" />
             Tìm kiếm và lọc phụ tùng
@@ -205,7 +206,7 @@ export default function PartsPage() {
                 Khoảng giá
               </label>
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <input
                     type="number"
                     placeholder="Từ (VNĐ)"
@@ -213,7 +214,7 @@ export default function PartsPage() {
                     onChange={(e) => setPriceFromInput(e.target.value)}
                     className="flex-1 px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
                   />
-                  <span className="text-lg font-bold text-gray-600">—</span>
+                  <span className="hidden text-lg font-bold text-gray-600 sm:inline">—</span>
                   <input
                     type="number"
                     placeholder="Đến (VNĐ)"
@@ -243,7 +244,7 @@ export default function PartsPage() {
                 Số lượng tồn kho
               </label>
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <input
                     type="number"
                     placeholder="Từ"
@@ -251,7 +252,7 @@ export default function PartsPage() {
                     onChange={(e) => setStockFromInput(e.target.value)}
                     className="flex-1 px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
                   />
-                  <span className="text-lg font-bold text-gray-600">—</span>
+                  <span className="hidden text-lg font-bold text-gray-600 sm:inline">—</span>
                   <input
                     type="number"
                     placeholder="Đến"
@@ -291,7 +292,7 @@ export default function PartsPage() {
               </button>
             </div>
           )}
-        </div>
+        </CollapsibleFilter>
 
         {/* Grid Cards */}
         {loading ? (

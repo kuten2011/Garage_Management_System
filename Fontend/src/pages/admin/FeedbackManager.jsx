@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const API = "/admin/feedbacks";
 const PAGE_SIZE = 10;
@@ -99,7 +100,7 @@ export default function FeedbackManager() {
         </h1>
 
         {/* Bộ lọc – ĐÃ BỔ SUNG LỌC THEO SAO */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <CollapsibleFilter title="Bộ lọc phản hồi" icon={Search}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="relative">
               <Search
@@ -139,7 +140,7 @@ export default function FeedbackManager() {
               <option value="1">1 sao</option>
             </select>
           </div>
-        </div>
+        </CollapsibleFilter>
 
         {/* Danh sách phản hồi – GIỮ NGUYÊN 100% NHƯ CŨ */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

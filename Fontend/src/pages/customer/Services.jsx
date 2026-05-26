@@ -10,6 +10,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import axiosInstance from "../../api/axiosInstance";
+import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const API = "/admin/services";
 const PAGE_SIZE = 8;
@@ -50,21 +51,31 @@ export default function ServicesPage() {
 
   const fetchData = async () => {
     setLoading(true);
+
     try {
       const params = { page, size: PAGE_SIZE };
+
       if (search.trim()) params.search = search.trim();
       if (priceFrom) params.priceFrom = priceFrom;
       if (priceTo) params.priceTo = priceTo;
 
       const res = await axiosInstance.get(API, { params });
-      setData(res.data);
+
+      setData({
+        content: Array.isArray(res.data?.content) ? res.data.content : [],
+        totalPages: res.data?.totalPages || 1,
+      });
     } catch (err) {
       console.error(err);
+
+      setData({
+        content: [],
+        totalPages: 1,
+      });
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchData();
   }, [page, search, priceFrom, priceTo]);
@@ -94,7 +105,7 @@ export default function ServicesPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Hero Banner */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-16 px-6">
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-10 sm:px-6 sm:py-16">
         <div className="max-w-7xl mx-auto">
           <button
             onClick={() => navigate("/")}
@@ -105,17 +116,17 @@ export default function ServicesPage() {
           </button>
 
           <div className="text-center">
-            <h1 className="text-5xl font-bold mb-4">TẤT CẢ DỊCH VỤ</h1>
-            <p className="text-xl opacity-90">
+            <h1 className="text-3xl sm:text-5xl font-bold mb-4">TẤT CẢ DỊCH VỤ</h1>
+            <p className="text-base sm:text-xl opacity-90">
               Khám phá đầy đủ các dịch vụ chuyên nghiệp của chúng tôi
             </p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
         {/* Bộ lọc */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-12">
+        <CollapsibleFilter title="Tìm kiếm dịch vụ" icon={Search} accent="yellow">
           <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-3">
             <Search size={28} className="text-yellow-600" />
             Tìm kiếm dịch vụ
@@ -137,7 +148,7 @@ export default function ServicesPage() {
             </div>
 
             <div className="md:col-span-2 space-y-3">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <span className="text-gray-700 font-semibold">Giá:</span>
                 <input
                   type="number"
@@ -146,7 +157,7 @@ export default function ServicesPage() {
                   onChange={(e) => setPriceFromInput(e.target.value)}
                   className="flex-1 px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200 outline-none"
                 />
-                <span className="text-lg font-bold text-gray-600">—</span>
+                <span className="hidden text-lg font-bold text-gray-600 sm:inline">—</span>
                 <input
                   type="number"
                   placeholder="Đến (VNĐ)"
@@ -180,7 +191,7 @@ export default function ServicesPage() {
               </button>
             </div>
           )}
-        </div>
+        </CollapsibleFilter>
 
         {/* Grid Cards */}
         {loading ? (
@@ -228,7 +239,9 @@ export default function ServicesPage() {
                   <div className="p-5">
                     <div className="mb-4 bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200">
                       <div className="text-center">
-                        <p className="text-xs text-gray-600 mb-1">Giá dịch vụ</p>
+                        <p className="text-xs text-gray-600 mb-1">
+                          Giá dịch vụ
+                        </p>
                         <p className="text-xl font-black text-red-600">
                           {Number(service.giaTien).toLocaleString()}đ
                         </p>
@@ -237,7 +250,8 @@ export default function ServicesPage() {
 
                     <div className="mb-4">
                       <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
-                        {service.moTa || "Dịch vụ chuyên nghiệp, đảm bảo chất lượng cao"}
+                        {service.moTa ||
+                          "Dịch vụ chuyên nghiệp, đảm bảo chất lượng cao"}
                       </p>
                     </div>
 
@@ -287,7 +301,9 @@ export default function ServicesPage() {
                 ))}
 
                 <button
-                  onClick={() => setPage((p) => Math.min(data.totalPages - 1, p + 1))}
+                  onClick={() =>
+                    setPage((p) => Math.min(data.totalPages - 1, p + 1))
+                  }
                   disabled={page === data.totalPages - 1}
                   className="p-3 rounded-full bg-white shadow-lg disabled:opacity-40 hover:bg-yellow-50 transition"
                 >

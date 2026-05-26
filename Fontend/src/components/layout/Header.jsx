@@ -200,17 +200,17 @@ export default function Header({ isScrolled }) {
       }`}
     >
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center py-4">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
+        <div className="flex justify-between items-center py-3 lg:py-4">
+          <div className="min-w-0 flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
             <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-gray-900 font-bold text-xl">
               G
             </div>
-            <span className="text-xl md:text-2xl font-bold text-yellow-400">
+            <span className="truncate text-lg sm:text-xl lg:text-2xl font-bold text-yellow-400">
               Web Garage
             </span>
           </div>
 
-          <nav className="hidden md:flex items-center space-x-6 text-sm">
+          <nav className="hidden lg:flex items-center gap-4 text-sm xl:gap-6">
             {finalMenuItems.map((item) => (
               <button
                 key={item.label}
@@ -253,7 +253,7 @@ export default function Header({ isScrolled }) {
           </nav>
 
           <button
-            className="md:hidden text-white"
+            className="lg:hidden text-white"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -261,7 +261,7 @@ export default function Header({ isScrolled }) {
         </div>
 
         {isMenuOpen && (
-          <nav className="md:hidden pb-4 space-y-2">
+          <nav className="lg:hidden pb-4 space-y-2">
             {finalMenuItems.map((item) => (
               <button
                 key={item.label}
@@ -310,13 +310,13 @@ export default function Header({ isScrolled }) {
 
       {/* POPUP */}
       {showAccountPopup && isLoggedIn && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto text-gray-800">
+        <div className="fixed inset-0 bg-black/70 flex items-end justify-center z-50 p-0 sm:items-center sm:p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full max-w-lg max-h-[92vh] overflow-y-auto text-gray-800">
             {/* Header sticky */}
-            <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-6 border-b border-gray-200">
-              <div className="flex items-center gap-3">
-                <Edit3 size={32} className="text-indigo-600" />
-                <h2 className="text-3xl font-bold text-indigo-700">
+            <div className="sticky top-0 bg-white z-10 flex items-center justify-between gap-3 p-4 sm:p-6 border-b border-gray-200">
+              <div className="min-w-0 flex items-center gap-3">
+                <Edit3 size={28} className="flex-shrink-0 text-indigo-600" />
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-indigo-700 leading-tight">
                   Chỉnh sửa thông tin tài khoản
                 </h2>
               </div>
@@ -329,13 +329,13 @@ export default function Header({ isScrolled }) {
             </div>
 
             {/* Nội dung scrollable */}
-            <div className="p-8">
+            <div className="p-4 sm:p-8">
               {loading ? (
                 <div className="text-center py-10 text-lg font-medium text-gray-700">
                   Đang tải thông tin...
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-5 sm:space-y-6">
                   <div>
                     <label className="block text-lg font-medium mb-2 text-gray-700">Họ và tên</label>
                     <input
@@ -427,18 +427,18 @@ export default function Header({ isScrolled }) {
             </div>
 
             {/* Footer sticky */}
-            <div className="sticky bottom-0 bg-white p-6 border-t border-gray-200 flex justify-center gap-6">
+            <div className="sticky bottom-0 bg-white p-4 sm:p-6 border-t border-gray-200 flex flex-col-reverse gap-3 sm:flex-row sm:justify-center sm:gap-6">
               <button
                 onClick={() => setShowAccountPopup(false)}
                 disabled={processing || loading}
-                className="px-12 py-4 border-4 border-gray-400 rounded-2xl font-bold text-xl text-gray-700 hover:bg-gray-100 transition disabled:opacity-50"
+                className="w-full sm:w-auto px-6 sm:px-12 py-3 sm:py-4 border-2 sm:border-4 border-gray-400 rounded-2xl font-bold text-base sm:text-xl text-gray-700 hover:bg-gray-100 transition disabled:opacity-50"
               >
                 Hủy bỏ
               </button>
               <button
                 onClick={handleSaveAccount}
                 disabled={processing || loading}
-                className="px-16 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold text-xl shadow-xl hover:shadow-2xl transition disabled:opacity-50"
+                className="w-full sm:w-auto px-6 sm:px-16 py-3 sm:py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold text-base sm:text-xl shadow-xl hover:shadow-2xl transition disabled:opacity-50"
               >
                 {processing ? "Đang lưu..." : "Lưu thay đổi"}
               </button>

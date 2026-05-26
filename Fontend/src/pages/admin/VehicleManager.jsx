@@ -13,6 +13,7 @@ import {
   Calendar,
   Shield,
 } from "lucide-react";
+import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const API = "/admin/vehicles";
 const CUSTOMER_API = "/admin/customers";
@@ -187,10 +188,11 @@ export default function VehicleManager() {
 
   // Toàn bộ phần render ngoài popup giữ nguyên 100% như code bạn gửi
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-12">
-          <h1 className="text-5xl font-bold text-gray-800">
+        <div className="flex items-center justify-between gap-4 mb-8">
+          <h1 className="flex items-center gap-3 text-4xl font-bold text-gray-800">
+            <Car className="text-indigo-600" size={40} />
             Quản Lý Xe Khách Hàng
           </h1>
           <button
@@ -212,67 +214,81 @@ export default function VehicleManager() {
               });
               setShowForm(true);
             }}
-            className="flex items-center gap-4 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold text-xl shadow-2xl hover:shadow-3xl transition"
+            className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition"
           >
-            <Plus size={32} />
+            <Plus size={22} />
             THÊM XE MỚI
           </button>
         </div>
 
-        {/* Tìm kiếm */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 mb-12">
-          <div className="relative max-w-2xl mx-auto">
-            <Search size={32} className="absolute left-8 top-6 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Tìm biển số, mã khách hàng..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-20 pr-8 py-6 text-2xl border-2 border-gray-300 rounded-2xl focus:border-indigo-500 outline-none"
-            />
-          </div>
-        </div>
-
         {/*Filter*/}
-        <div className="flex justify-center gap-6 mt-8 mb-12">
-          <button
-            onClick={() => setFilter("ALL")}
-            className={`px-6 py-3 rounded-xl font-bold ${
-              filter === "ALL" ? "bg-indigo-600 text-white" : "bg-gray-200"
-            }`}
-          >
-            Tất cả
-          </button>
+        <CollapsibleFilter title="Tìm kiếm & lọc xe" icon={Search}>
+          <div className="space-y-5">
+            <div className="relative">
+              <Search size={22} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Tìm biển số, mã khách hàng..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-indigo-500 outline-none"
+              />
+            </div>
 
-          <button
-            onClick={() => setFilter("OVERDUE")}
-            className={`px-6 py-3 rounded-xl font-bold ${
-              filter === "OVERDUE" ? "bg-red-600 text-white" : "bg-gray-200"
-            }`}
-          >
-            Quá hạn
-          </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setFilter("ALL")}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition ${
+                  filter === "ALL" ? "bg-indigo-600 text-white" : "bg-gray-200"
+                }`}
+              >
+                Tất cả
+              </button>
 
-          <button
-            onClick={() => setFilter("DUE_SOON")}
-            className={`px-6 py-3 rounded-xl font-bold ${
-              filter === "DUE_SOON" ? "bg-yellow-500 text-white" : "bg-gray-200"
-            }`}
-          >
-            Sắp tới hạn
-          </button>
+              <button
+                onClick={() => setFilter("OVERDUE")}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition ${
+                  filter === "OVERDUE" ? "bg-red-600 text-white" : "bg-gray-200"
+                }`}
+              >
+                Quá hạn
+              </button>
 
-          <button
-            onClick={() => setFilter("OK")}
-            className={`px-6 py-3 rounded-xl font-bold ${
-              filter === "OK" ? "bg-green-600 text-white" : "bg-gray-200"
-            }`}
-          >
-            Còn hạn
-          </button>
-        </div>
+              <button
+                onClick={() => setFilter("DUE_SOON")}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition ${
+                  filter === "DUE_SOON" ? "bg-yellow-500 text-white" : "bg-gray-200"
+                }`}
+              >
+                Sắp tới hạn
+              </button>
 
-        {/* Danh sách xe – GIỮ NGUYÊN 100% NHƯ CODE CŨ */}
+              <button
+                onClick={() => setFilter("OK")}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition ${
+                  filter === "OK" ? "bg-green-600 text-white" : "bg-gray-200"
+                }`}
+              >
+                Còn hạn
+              </button>
+            </div>
+
+            {(search || filter !== "ALL") && (
+              <div className="text-center">
+                <button
+                  onClick={() => {
+                    setSearch("");
+                    setFilter("ALL");
+                  }}
+                  className="text-sm font-bold text-red-600 underline hover:text-red-800"
+                >
+                  Xóa bộ lọc
+                </button>
+              </div>
+            )}
+          </div>
+        </CollapsibleFilter>
+
         {loading ? (
           <p className="text-center text-3xl text-gray-500 py-32">
             Đang tải...
@@ -282,48 +298,67 @@ export default function VehicleManager() {
             Không có xe nào
           </p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {data.content.map((v) => (
               <div
                 key={v.bienSo}
-                className="bg-white rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition transform hover:-translate-y-2"
+                className="bg-white rounded-3xl shadow-2xl p-8 hover:shadow-3xl transition transform hover:-translate-y-2 relative"
               >
-                <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-8 text-white text-center">
-                  <Car size={64} className="mx-auto mb-4" />
-                  <h3 className="text-4xl font-bold font-mono">{v.bienSo}</h3>
-                  <p className="text-2xl mt-2">
-                    {v.hangXe} {v.mauXe}
-                  </p>
+                <div className="absolute top-4 right-4 flex gap-3">
+                  <button
+                    onClick={() => handleEdit(v)}
+                    className="text-blue-600 hover:text-blue-800 transition"
+                    title="Chỉnh sửa"
+                  >
+                    <Edit3 size={24} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(v.bienSo)}
+                    className="text-red-600 hover:text-red-800 transition"
+                    title="Xóa xe"
+                  >
+                    <Trash2 size={24} />
+                  </button>
                 </div>
 
-                <div className="p-8">
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <User size={28} className="text-blue-600" />
+                <div className="flex items-center gap-6 mb-6 pr-16">
+                  <Car size={34} className="w-20 h-20 p-5 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full text-indigo-700 flex-shrink-0" />
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-800 font-mono">{v.bienSo}</h3>
+                    <p className="text-lg text-indigo-600 font-semibold">
+                      {v.hangXe} {v.mauXe}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="space-y-3 text-lg">
+                    <div className="flex items-center gap-3">
+                      <User size={22} className="text-blue-600" />
                       <div>
-                        <p className="font-bold text-xl">{v.maKH}</p>
-                        <p className="text-gray-600 text-lg">
+                        <p className="font-bold text-base">{v.maKH}</p>
+                        <p className="text-gray-600 text-sm">
                           {v.tenKH || "Chưa có tên"}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <Gauge size={28} className="text-gray-600" />
-                      <span className="text-xl font-medium">
+                    <div className="flex items-center gap-3">
+                      <Gauge size={22} className="text-gray-600" />
+                      <span className="text-base font-medium">
                         {v.soKm?.toLocaleString() || 0} km • Năm {v.namSX}
                       </span>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <Shield size={28} className="text-green-600" />
-                      <span className="text-xl font-medium text-green-700">
+                    <div className="flex items-center gap-3">
+                      <Shield size={22} className="text-green-600" />
+                      <span className="text-base font-medium text-green-700">
                         Bảo hành đến: {v.ngayBaoHanhDen || "Không có"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-4 bg-orange-50 p-4 rounded-2xl border-2 border-orange-300">
-                      <Calendar size={28} className="text-orange-600" />
+                    <div className="flex items-start gap-3 bg-orange-50 p-3 rounded-xl border border-orange-300">
+                      <Calendar size={22} className="text-orange-600 mt-0.5" />
                       <div>
                         <p
-                          className={`font-bold text-xl ${
+                          className={`font-bold text-sm ${
                             !v.ngayBaoDuongTiepTheo
                               ? "text-gray-500"
                               : new Date(v.ngayBaoDuongTiepTheo) < new Date()
@@ -338,7 +373,7 @@ export default function VehicleManager() {
                           {v.ngayBaoDuongTiepTheo || "Chưa xác định"}
                         </p>
 
-                        <p className="text-orange-700">
+                        <p className="text-sm text-orange-700">
                           Chu kỳ: {v.chuKyBaoDuongKm || 10000}km /{" "}
                           {v.chuKyBaoDuongThang || 12} tháng
                         </p>
@@ -346,19 +381,19 @@ export default function VehicleManager() {
                     </div>
                   </div>
 
-                  <div className="flex gap-4 mt-8">
+                  <div className="hidden">
                     <button
                       onClick={() => handleEdit(v)}
-                      className="flex-1 flex items-center justify-center gap-3 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition"
+                      className="flex-1 flex items-center justify-center gap-2 py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition"
                     >
-                      <Edit3 size={24} />
+                      <Edit3 size={18} />
                       SỬA
                     </button>
                     <button
                       onClick={() => handleDelete(v.bienSo)}
-                      className="flex-1 flex items-center justify-center gap-3 py-4 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition"
+                      className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 transition"
                     >
-                      <Trash2 size={24} />
+                      <Trash2 size={18} />
                       XÓA
                     </button>
                   </div>
@@ -370,37 +405,37 @@ export default function VehicleManager() {
 
         {/* Phân trang – GIỮ NGUYÊN */}
         {data.totalPages > 1 && (
-          <div className="flex justify-center items-center gap-8 mt-16">
+          <div className="flex justify-center items-center gap-4 mt-8">
             <button
               onClick={() => setPage(Math.max(0, page - 1))}
               disabled={page === 0}
-              className="p-4 rounded-xl bg-gray-200 disabled:opacity-50 hover:bg-gray-300 transition"
+              className="p-3 rounded-xl bg-gray-200 disabled:opacity-50 hover:bg-gray-300 transition"
             >
-              <ChevronLeft size={32} />
+              <ChevronLeft size={22} />
             </button>
-            <span className="text-2xl font-bold">
+            <span className="text-base font-bold">
               Trang {page + 1} / {data.totalPages}
             </span>
             <button
               onClick={() => setPage(Math.min(data.totalPages - 1, page + 1))}
               disabled={page === data.totalPages - 1}
-              className="p-4 rounded-xl bg-gray-200 disabled:opacity-50 hover:bg-gray-300 transition"
+              className="p-3 rounded-xl bg-gray-200 disabled:opacity-50 hover:bg-gray-300 transition"
             >
-              <ChevronRight size={32} />
+              <ChevronRight size={22} />
             </button>
           </div>
         )}
 
         {/* Form thêm/sửa xe – CHỈ SỬA PHẦN NÀY */}
         {showForm && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-8">
-            <div className="bg-white rounded-3xl shadow-3xl p-12 w-full max-w-4xl max-h-screen overflow-y-auto">
-              <h2 className="text-4xl font-bold text-center mb-12 text-indigo-700">
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-4xl max-h-[92vh] overflow-y-auto">
+              <h2 className="text-2xl font-bold text-center mb-6 text-indigo-700">
                 {editing ? "CẬP NHẬT THÔNG TIN XE" : "THÊM XE MỚI"}
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="space-y-2">
-                  <label className="block text-xl font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700">
                     Biển số
                   </label>
                   <input
@@ -413,13 +448,13 @@ export default function VehicleManager() {
                       })
                     }
                     disabled={editing}
-                    className="w-full px-8 py-6 text-2xl font-mono border-2 border-gray-300 rounded-2xl focus:border-indigo-500 outline-none disabled:bg-gray-100"
+                    className="w-full px-4 py-3 text-base font-mono border-2 border-gray-300 rounded-xl focus:border-indigo-500 outline-none disabled:bg-gray-100"
                   />
                 </div>
 
                 {/* Dropdown khách hàng */}
                 <div className="space-y-2">
-                  <label className="block text-xl font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700">
                     Khách hàng <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -427,7 +462,7 @@ export default function VehicleManager() {
                     onChange={(e) =>
                       setFormData({ ...formData, maKH: e.target.value })
                     }
-                    className="w-full px-8 py-6 text-xl border-2 border-gray-300 rounded-2xl focus:border-indigo-500 outline-none"
+                    className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-indigo-500 outline-none"
                     required
                   >
                     <option value="">-- Chọn khách hàng --</option>
@@ -441,7 +476,7 @@ export default function VehicleManager() {
 
                 {/* Dropdown hãng xe + input tùy chỉnh */}
                 <div className="space-y-2">
-                  <label className="block text-xl font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700">
                     Hãng xe <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -452,7 +487,7 @@ export default function VehicleManager() {
                         setCustomBrand("");
                       }
                     }}
-                    className="w-full px-8 py-6 text-xl border-2 border-gray-300 rounded-2xl focus:border-indigo-500 outline-none"
+                    className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-indigo-500 outline-none"
                   >
                     <option value="">-- Chọn hãng xe --</option>
                     {COMMON_BRANDS.map((brand) => (
@@ -469,14 +504,14 @@ export default function VehicleManager() {
                       placeholder="Nhập hãng xe..."
                       value={customBrand}
                       onChange={(e) => setCustomBrand(e.target.value)}
-                      className="w-full mt-4 px-8 py-6 text-xl border-2 border-indigo-500 rounded-2xl focus:ring-4 focus:ring-indigo-300 outline-none"
+                      className="w-full mt-3 px-4 py-3 text-base border-2 border-indigo-500 rounded-xl focus:ring-4 focus:ring-indigo-300 outline-none"
                       required
                     />
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-xl font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700">
                     Mẫu xe / Màu
                   </label>
                   <input
@@ -485,12 +520,12 @@ export default function VehicleManager() {
                     onChange={(e) =>
                       setFormData({ ...formData, mauXe: e.target.value })
                     }
-                    className="w-full px-8 py-6 text-2xl border-2 border-gray-300 rounded-2xl focus:border-indigo-500 outline-none"
+                    className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-indigo-500 outline-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-xl font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700">
                     Số km hiện tại
                   </label>
                   <input
@@ -502,12 +537,12 @@ export default function VehicleManager() {
                         soKm: parseInt(e.target.value) || "",
                       })
                     }
-                    className="w-full px-8 py-6 text-2xl border-2 border-gray-300 rounded-2xl focus:border-indigo-500 outline-none"
+                    className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-indigo-500 outline-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-xl font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700">
                     Năm sản xuất
                   </label>
                   <input
@@ -519,12 +554,12 @@ export default function VehicleManager() {
                         namSX: parseInt(e.target.value) || "",
                       })
                     }
-                    className="w-full px-8 py-6 text-2xl border-2 border-gray-300 rounded-2xl focus:border-indigo-500 outline-none"
+                    className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-indigo-500 outline-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-xl font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700">
                     Bảo hành đến ngày
                   </label>
                   <input
@@ -536,12 +571,12 @@ export default function VehicleManager() {
                         ngayBaoHanhDen: e.target.value,
                       })
                     }
-                    className="w-full px-8 py-6 text-2xl border-2 border-gray-300 rounded-2xl focus:border-indigo-500 outline-none"
+                    className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-indigo-500 outline-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-xl font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700">
                     Bảo dưỡng tiếp theo
                   </label>
                   <input
@@ -553,12 +588,12 @@ export default function VehicleManager() {
                         ngayBaoDuongTiepTheo: e.target.value,
                       })
                     }
-                    className="w-full px-8 py-6 text-2xl border-2 border-gray-300 rounded-2xl focus:border-indigo-500 outline-none"
+                    className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-indigo-500 outline-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-xl font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700">
                     Chu kỳ bảo dưỡng (km)
                   </label>
                   <input
@@ -570,12 +605,12 @@ export default function VehicleManager() {
                         chuKyBaoDuongKm: parseInt(e.target.value) || 10000,
                       })
                     }
-                    className="w-full px-8 py-6 text-2xl border-2 border-gray-300 rounded-2xl focus:border-indigo-500 outline-none"
+                    className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-indigo-500 outline-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-xl font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700">
                     Chu kỳ bảo dưỡng (tháng)
                   </label>
                   <input
@@ -587,25 +622,25 @@ export default function VehicleManager() {
                         chuKyBaoDuongThang: parseInt(e.target.value) || 12,
                       })
                     }
-                    className="w-full px-8 py-6 text-2xl border-2 border-gray-300 rounded-2xl focus:border-indigo-500 outline-none"
+                    className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-indigo-500 outline-none"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-center gap-12 mt-16">
+              <div className="flex flex-col-reverse gap-3 mt-8 sm:flex-row sm:justify-center">
                 <button
                   onClick={() => {
                     setShowForm(false);
                     setSelectedBrand("");
                     setCustomBrand("");
                   }}
-                  className="px-20 py-6 border-4 border-gray-400 rounded-2xl font-bold text-2xl hover:bg-gray-100 transition"
+                  className="px-8 py-3 border-2 border-gray-400 rounded-xl font-bold text-base hover:bg-gray-100 transition"
                 >
                   HỦY BỎ
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-24 py-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold text-2xl shadow-2xl hover:shadow-3xl transition"
+                  className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition"
                 >
                   {editing ? "CẬP NHẬT" : "THÊM MỚI"}
                 </button>

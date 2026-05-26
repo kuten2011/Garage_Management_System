@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Package, Star, Clock } from "lucide-react";
+import { ArrowRight, Clock, Package, ShieldCheck, Star } from "lucide-react";
 import axiosInstance from "../../api/axiosInstance";
 
 const API = `/admin/parts`;
 const DEFAULT_PART_IMAGE = "https://placehold.net/400x400.png";
 
-export default function PartsSection({ onViewAllParts }) {
+export default function PartsSection() {
   const [parts, setParts] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -19,8 +19,7 @@ export default function PartsSection({ onViewAllParts }) {
     setLoading(true);
     try {
       const res = await axiosInstance.get(`${API}?page=0&size=8`);
-      const result = res.data;
-      setParts(result.content || []);
+      setParts(res.data?.content || []);
     } catch (err) {
       console.error("Lỗi tải phụ tùng:", err);
     } finally {
@@ -29,153 +28,101 @@ export default function PartsSection({ onViewAllParts }) {
   };
 
   const getStockStatus = (soLuongTon) => {
-    if (soLuongTon <= 0)
-      return {
-        text: "Hết hàng",
-        color: "text-red-600",
-        bgColor: "bg-red-50",
-        borderColor: "border-red-200",
-      };
-    return {
-      text: "Còn hàng",
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      borderColor: "border-green-200",
-    };
-  };
-
-  const handleNavigate = () => {
-    navigate("/parts");
+    if (soLuongTon <= 0) {
+      return { text: "Hết hàng", className: "bg-red-500 text-white" };
+    }
+    return { text: "Còn hàng", className: "bg-emerald-500 text-white" };
   };
 
   return (
-    <section id="parts" className="py-20 bg-gray-100">
-      <div className="container mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4 text-gray-800">
-            Phụ tùng nổi bật
-          </h2>
-          <div className="w-20 h-1 bg-yellow-400 mx-auto"></div>
+    <section id="parts" className="relative overflow-hidden bg-slate-50 py-16 sm:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between" data-reveal>
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-sm font-bold text-emerald-800">
+              <Package size={16} />
+              Phụ tùng nổi bật
+            </div>
+            <h2 className="text-3xl font-black text-slate-900 sm:text-4xl">
+              Linh kiện chính hãng, dễ kiểm tra tồn kho
+            </h2>
+            <p className="mt-3 max-w-2xl text-slate-600">
+              Danh sách phụ tùng được hiển thị trực quan với giá, tình trạng tồn và hình ảnh sản phẩm.
+            </p>
+          </div>
+
+          <button
+            onClick={() => navigate("/parts")}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-yellow-400 px-5 py-3 font-bold text-slate-950 shadow-lg shadow-yellow-500/20 transition hover:-translate-y-0.5 hover:bg-yellow-300"
+          >
+            Xem phụ tùng
+            <ArrowRight size={18} />
+          </button>
         </div>
 
-        {/* Loading */}
         {loading ? (
-          <div className="text-center py-16">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-yellow-400 border-t-transparent"></div>
-            <p className="mt-4 text-gray-600">Đang tải phụ tùng...</p>
+          <div className="py-16 text-center" data-reveal>
+            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-yellow-400 border-t-transparent" />
+            <p className="mt-4 text-slate-600">Đang tải phụ tùng...</p>
           </div>
         ) : (
-          <>
-            {/* Grid phụ tùng */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              {parts.slice(0, 8).map((part) => {
-                const stockStatus = getStockStatus(part.soLuongTon);
-                return (
-                  <div
-                    key={part.maPT}
-                    onClick={handleNavigate}
-                    className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all transform hover:-translate-y-2 cursor-pointer"
-                  >
-                    {/* Card Header */}
-                    <div className="h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
-                      <img
-                        src={part.hinhAnh || DEFAULT_PART_IMAGE}
-                        alt={part.tenPT}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = DEFAULT_PART_IMAGE;
-                        }}
-                      />
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {parts.slice(0, 8).map((part, index) => {
+              const stockStatus = getStockStatus(part.soLuongTon);
+              return (
+                <button
+                  key={part.maPT}
+                  type="button"
+                  onClick={() => navigate("/parts")}
+                  className="home-part-card group overflow-hidden rounded-2xl bg-white text-left shadow-lg ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-2xl"
+                  data-reveal
+                  style={{ transitionDelay: `${index * 55}ms` }}
+                >
+                  <div className="relative h-48 overflow-hidden bg-slate-200">
+                    <img
+                      src={part.hinhAnh || DEFAULT_PART_IMAGE}
+                      alt={part.tenPT}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = DEFAULT_PART_IMAGE;
+                      }}
+                    />
+                    <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-slate-950/70 to-transparent" />
+                    <span className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-black shadow-lg ${stockStatus.className}`}>
+                      {stockStatus.text}
+                    </span>
+                  </div>
 
-                      {/* Badge trạng thái */}
-                      <div
-                        className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow-lg ${
-                          stockStatus.text === "Còn hàng"
-                            ? "bg-green-500 text-white"
-                            : "bg-red-500 text-white"
-                        }`}
-                      >
-                        {stockStatus.text}
-                      </div>
+                  <div className="p-5">
+                    <h3 className="mb-3 line-clamp-2 min-h-[3rem] text-lg font-black text-slate-900">
+                      {part.tenPT}
+                    </h3>
+
+                    <div className="mb-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        Giá phụ tùng
+                      </p>
+                      <p className="mt-1 text-2xl font-black text-red-600">
+                        {Number(part.donGia).toLocaleString()}đ
+                      </p>
                     </div>
 
-                    {/* Card Body */}
-                    <div className="p-6">
-                      {/* Giá tiền */}
-                      <div className="mb-4 bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200">
-                        <div className="text-center">
-                          <p className="text-sm text-gray-600 mb-1">
-                            Giá phụ tùng
-                          </p>
-                          <p className="text-2xl font-black text-red-600">
-                            {Number(part.donGia).toLocaleString()}đ
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Tính năng */}
-                      <div className="flex items-center justify-center gap-4 mb-4 text-xs text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Clock size={16} className="text-yellow-600" />
-                          <span>Giao nhanh</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star size={16} className="text-yellow-600" />
-                          <span>Chính hãng</span>
-                        </div>
-                      </div>
-
-                      {/* Button */}
-                      <a
-                        href={
-                          part.soLuongTon === 0 ? undefined : "tel:0944799819"
-                        }
-                        className={
-                          part.soLuongTon === 0 ? "pointer-events-none" : ""
-                        }
-                      >
-                        <button
-                          className={`w-full font-bold py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg ${
-                            part.soLuongTon === 0
-                              ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                              : "bg-yellow-400 hover:bg-yellow-500 text-gray-900"
-                          }`}
-                          disabled={part.soLuongTon === 0}
-                        >
-                          {part.soLuongTon === 0 ? "Hết hàng" : "Đặt mua ngay"}
-                        </button>
-                      </a>
+                    <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                      <span className="inline-flex items-center gap-1">
+                        <Clock size={15} className="text-yellow-600" />
+                        Giao nhanh
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <ShieldCheck size={15} className="text-emerald-600" />
+                        Chính hãng
+                      </span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Nút xem tất cả */}
-            <div className="text-center">
-              <button
-                onClick={handleNavigate}
-                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-10 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg inline-flex items-center gap-2"
-              >
-                Xem tất cả phụ tùng
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 7l5 5m0 0l-5 5m5-5H6"
-                  />
-                </svg>
-              </button>
-            </div>
-          </>
+                </button>
+              );
+            })}
+          </div>
         )}
       </div>
     </section>

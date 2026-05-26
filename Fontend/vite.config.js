@@ -5,13 +5,7 @@ export default defineConfig({
   plugins: [react()],
 
   server: {
-    allowedHosts: ["acorn-manger-rekindle.ngrok-free.dev"],
-    proxy: {
-      "/admin": { target: "http://localhost:8080", changeOrigin: true },
-      "/web_garage": { target: "http://localhost:8080", changeOrigin: true },
-      "/customer": { target: "http://localhost:8080", changeOrigin: true }, // ✅ thêm
-      "/chatbot": { target: "http://localhost:8080", changeOrigin: true }, // ✅ thêm nếu dùng
-    },
+    allowedHosts: ["performing-sizes-given-timing.trycloudflare.com"]
   },
 
   build: {

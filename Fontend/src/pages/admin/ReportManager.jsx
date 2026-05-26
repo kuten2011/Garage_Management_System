@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance"; 
 import { TrendingUp, DollarSign, Car, Wrench, Calendar, Building } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const API = "/admin/reports";
 
@@ -84,7 +85,7 @@ export default function ReportManager() {
         </h1>
 
         {/* Bộ lọc */}
-        <div className="bg-white rounded-2xl shadow p-6 mb-8">
+        <CollapsibleFilter title="Bộ lọc báo cáo" icon={Calendar}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Từ tháng</label>
@@ -113,7 +114,7 @@ export default function ReportManager() {
               </button>
             </div>
           </div>
-        </div>
+        </CollapsibleFilter>
 
         {/* Thống kê tổng hợp */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">

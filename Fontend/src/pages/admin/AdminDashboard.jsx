@@ -57,6 +57,8 @@ export default function AdminDashboard() {
   }, [lowStockThreshold]); // Tự động reload khi thay đổi ngưỡng
 
   const handleManualSend = async () => {
+    console.log("Gửi email chăm sóc khách hàng thủ công...");
+    console.log("API URL:", import.meta.env.VITE_API_URL);
     setIsLoading(true);
     setMessage("");
 
@@ -74,9 +76,9 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-0 sm:p-2 lg:p-6">
       {/* 3 ô thống kê */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 lg:mb-10">
         {statsLoading ? (
           <div className="col-span-3 text-center py-10 text-gray-500 text-xl">
             Đang tải thống kê...
@@ -84,7 +86,7 @@ export default function AdminDashboard() {
         ) : (
           <>
             {/* Lịch hôm nay */}
-            <div className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all">
+            <div className="bg-white rounded-2xl shadow-xl p-5 lg:p-8 hover:shadow-2xl transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Lịch hôm nay</p>
@@ -97,7 +99,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Đang sửa chữa – CHỈ TÍNH "ĐANG SỬA", KHÔNG TÍNH "HOÀN THÀNH" */}
-            <div className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all">
+            <div className="bg-white rounded-2xl shadow-xl p-5 lg:p-8 hover:shadow-2xl transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Đang sửa chữa</p>
@@ -110,7 +112,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Phụ tùng sắp hết */}
-            <div className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all">
+            <div className="bg-white rounded-2xl shadow-xl p-5 sm:col-span-2 lg:col-span-1 lg:p-8 hover:shadow-2xl transition-all">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
@@ -118,7 +120,7 @@ export default function AdminDashboard() {
                     <Settings className="w-4 h-4 text-gray-400" />
                   </div>
                   <p className="text-4xl font-bold">{stats.lowStockParts}</p>
-                  <div className="mt-3 flex items-center gap-3">
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
                     <span className="text-sm text-gray-600">Cảnh báo khi dưới:</span>
                     <input
                       type="number"
@@ -140,11 +142,11 @@ export default function AdminDashboard() {
       </div>
 
       {/* Khu vực chào mừng + nút gửi email thủ công */}
-      <div className="bg-white rounded-2xl shadow-xl p-10">
-        <h3 className="text-3xl font-bold text-indigo-700 mb-4">
+      <div className="bg-white rounded-2xl shadow-xl p-5 lg:p-10">
+        <h3 className="text-2xl lg:text-3xl font-bold text-indigo-700 mb-4">
           Chào mừng đến Hệ thống Quản trị Garage
         </h3>
-        <p className="text-gray-600 text-lg mb-8">
+        <p className="text-gray-600 text-base lg:text-lg mb-6 lg:mb-8">
           Quản lý toàn diện: lịch hẹn, sửa chữa, kho phụ tùng, nhân viên, khách hàng và báo cáo doanh thu.
         </p>
 
@@ -152,7 +154,7 @@ export default function AdminDashboard() {
           <button
             onClick={handleManualSend}
             disabled={isLoading}
-            className={`flex items-center gap-3 px-8 py-4 rounded-xl text-white font-semibold text-lg transition-all
+            className={`flex w-full items-center justify-center gap-3 px-5 py-3 rounded-xl text-white font-semibold text-base transition-all sm:w-auto sm:px-8 sm:py-4 sm:text-lg
               ${isLoading
                 ? "bg-gray-400 cursor-not-allowed"
                 : "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transform hover:-translate-y-1"

@@ -12,6 +12,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 export default function CustomerManager() {
   const [customers, setCustomers] = useState([]);
@@ -178,32 +179,32 @@ export default function CustomerManager() {
     <div className="min-h-screen bg-gray-50 py-8 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-10">
-          <h1 className="text-5xl font-bold text-gray-800 flex items-center gap-4">
-            <User size={48} className="text-green-600" />
+        <div className="flex justify-between items-center gap-4 mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
+            <User size={40} className="text-green-600" />
             Quản Lý Khách Hàng
           </h1>
           <button
             onClick={openAddModal}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-8 py-4 rounded-2xl font-bold text-xl shadow-xl hover:shadow-2xl transition flex items-center gap-3"
+            className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition flex items-center gap-3"
           >
-            <Plus size={28} />
+            <Plus size={22} />
             Thêm khách hàng mới
           </button>
         </div>
 
         {/* Bộ lọc */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 mb-10">
-          <div className="flex items-center gap-4 mb-6">
-            <Search size={32} className="text-green-600" />
-            <h2 className="text-3xl font-bold text-gray-800">Tìm kiếm & Lọc</h2>
+        <CollapsibleFilter title="Tìm kiếm & Lọc" icon={Search} accent="green">
+          <div className="flex items-center gap-3 mb-5">
+            <Search size={24} className="text-green-600" />
+            <h2 className="text-xl font-bold text-gray-800">Tìm kiếm & Lọc</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <input
               placeholder="Mã khách hàng"
               value={filters.maKH}
               onChange={(e) => setFilters({ ...filters, maKH: e.target.value })}
-              className="px-6 py-4 border-2 border-gray-300 rounded-2xl text-lg focus:ring-4 focus:ring-green-300"
+              className="px-4 py-3 border-2 border-gray-300 rounded-xl text-base focus:ring-4 focus:ring-green-300"
             />
             <input
               placeholder="Họ và tên"
@@ -211,13 +212,13 @@ export default function CustomerManager() {
               onChange={(e) =>
                 setFilters({ ...filters, hoTen: e.target.value })
               }
-              className="px-6 py-4 border-2 border-gray-300 rounded-2xl text-lg focus:ring-4 focus:ring-green-300"
+              className="px-4 py-3 border-2 border-gray-300 rounded-xl text-base focus:ring-4 focus:ring-green-300"
             />
             <input
               placeholder="Số điện thoại"
               value={filters.sdt}
               onChange={(e) => setFilters({ ...filters, sdt: e.target.value })}
-              className="px-6 py-4 border-2 border-gray-300 rounded-2xl text-lg focus:ring-4 focus:ring-green-300"
+              className="px-4 py-3 border-2 border-gray-300 rounded-xl text-base focus:ring-4 focus:ring-green-300"
             />
             <input
               placeholder="Email"
@@ -225,10 +226,10 @@ export default function CustomerManager() {
               onChange={(e) =>
                 setFilters({ ...filters, email: e.target.value })
               }
-              className="px-6 py-4 border-2 border-gray-300 rounded-2xl text-lg focus:ring-4 focus:ring-green-300"
+              className="px-4 py-3 border-2 border-gray-300 rounded-xl text-base focus:ring-4 focus:ring-green-300"
             />
           </div>
-        </div>
+        </CollapsibleFilter>
 
         {/* Danh sách khách hàng */}
         {loading ? (
@@ -240,7 +241,7 @@ export default function CustomerManager() {
             Không tìm thấy khách hàng nào
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {filteredCustomers.map((c) => (
               <div
                 key={c.maKH}

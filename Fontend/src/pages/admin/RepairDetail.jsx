@@ -226,7 +226,7 @@ export default function RepairDetail() {
     );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-6">
+    <div className="repair-detail-page min-h-screen bg-gray-50 py-8 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
         <Link
           to={isStaff ? "/admin/repairs" : "/my-repairs"}

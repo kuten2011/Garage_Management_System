@@ -12,9 +12,10 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
-  CreditCard,
+  Filter,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const API_BASE = "/admin";
 const API = `${API_BASE}/repairs`;
@@ -196,9 +197,9 @@ export default function RepairManager() {
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
-            <Wrench size={32} className="text-indigo-600" />
+        <div className="mb-8 flex justify-between items-center gap-4">
+          <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
+            <Wrench size={40} className="text-indigo-600" />
             Quản Lý Phiếu Sửa Chữa
           </h1>
           <button
@@ -211,7 +212,11 @@ export default function RepairManager() {
         </div>
 
         {/* Tìm kiếm & lọc */}
-        <div className="bg-white rounded-2xl shadow p-5 mb-6">
+        <CollapsibleFilter title="Tìm kiếm & Lọc phiếu" icon={Filter}>
+          <h3 className="mb-5 flex items-center gap-3 text-xl font-bold text-gray-800">
+            <Filter size={24} className="text-indigo-600" />
+            Tìm kiếm & Lọc phiếu
+          </h3>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -234,10 +239,11 @@ export default function RepairManager() {
               <option value="Hoàn thành">Hoàn thành</option>
             </select>
           </div>
-        </div>
+        </CollapsibleFilter>
 
         {/* Bảng danh sách */}
-        <div className="bg-white rounded-2xl shadow overflow-hidden">
+
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
@@ -464,3 +470,4 @@ export default function RepairManager() {
     </div>
   );
 }
+

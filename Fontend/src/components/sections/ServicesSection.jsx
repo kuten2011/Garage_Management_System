@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Wrench, Star, Clock, Sparkles } from "lucide-react";
+import { ArrowRight, Clock, ShieldCheck, Sparkles, Star, Wrench } from "lucide-react";
 import axiosInstance from "../../api/axiosInstance";
 
 const API = `/admin/services`;
 
-export default function ServicesSection({ onViewAllServices }) {
+export default function ServicesSection() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -18,8 +18,7 @@ export default function ServicesSection({ onViewAllServices }) {
     setLoading(true);
     try {
       const res = await axiosInstance.get(`${API}?page=0&size=8`);
-      const result = res.data;
-      setServices(result.content || []);
+      setServices(res.data?.content || []);
     } catch (err) {
       console.error("Lỗi tải dịch vụ:", err);
     } finally {
@@ -28,122 +27,89 @@ export default function ServicesSection({ onViewAllServices }) {
   };
 
   return (
-    <section id="services" className="py-20 bg-gray-100">
-      <div className="container mx-auto px-4">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4 text-gray-800">
-            Dịch vụ nổi bật
-          </h2>
-          <div className="w-20 h-1 bg-yellow-400 mx-auto"></div>
+    <section id="services" className="relative overflow-hidden bg-white py-16 sm:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between" data-reveal>
+          <div>
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-yellow-100 px-3 py-1 text-sm font-bold text-yellow-800">
+              <Sparkles size={16} />
+              Dịch vụ nổi bật
+            </div>
+            <h2 className="text-3xl font-black text-slate-900 sm:text-4xl">
+              Những hạng mục khách đặt nhiều nhất
+            </h2>
+            <p className="mt-3 max-w-2xl text-slate-600">
+              Từ bảo dưỡng định kỳ đến sửa chữa chuyên sâu, mọi dịch vụ được trình bày rõ giá để khách dễ chọn.
+            </p>
+          </div>
+
+          <button
+            onClick={() => navigate("/services")}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800"
+          >
+            Xem tất cả
+            <ArrowRight size={18} />
+          </button>
         </div>
 
-        {/* Loading */}
         {loading ? (
-          <div className="text-center py-16">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-yellow-400 border-t-transparent"></div>
-            <p className="mt-4 text-gray-600">Đang tải dịch vụ...</p>
+          <div className="py-16 text-center" data-reveal>
+            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-yellow-400 border-t-transparent" />
+            <p className="mt-4 text-slate-600">Đang tải dịch vụ...</p>
           </div>
         ) : (
-          <>
-            {/* Grid dịch vụ */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              {services.slice(0, 8).map((service) => (
-                <div
-                  key={service.maDV}
-                  onClick={() => navigate("/services")}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all transform hover:-translate-y-2 cursor-pointer"
-                >
-                  {/* Card Header */}
-                  <div className="h-48 bg-gradient-to-br from-gray-800 to-gray-900 relative overflow-hidden flex items-center justify-center">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400 opacity-10 rounded-full -mr-16 -mt-16"></div>
-                    <div className="absolute bottom-0 left-0 w-24 h-24 bg-yellow-400 opacity-10 rounded-full -ml-12 -mb-12"></div>
-
-                    <div className="relative text-center z-10 p-4">
-                      <div className="flex justify-center mb-3">
-                        <Wrench className="text-yellow-400" size={40} />
-                      </div>
-                      <h3 className="text-xl font-bold text-white line-clamp-2">
-                        {service.tenDV}
-                      </h3>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {services.slice(0, 8).map((service, index) => (
+              <button
+                key={service.maDV}
+                type="button"
+                onClick={() => navigate("/services")}
+                className="home-service-card group overflow-hidden rounded-2xl bg-white text-left shadow-lg ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-2xl"
+                data-reveal
+                style={{ transitionDelay: `${index * 55}ms` }}
+              >
+                <div className="relative flex h-44 items-center justify-center overflow-hidden bg-slate-950 p-5">
+                  <div className="absolute inset-0 home-card-sheen opacity-70" />
+                  <div className="relative z-10 text-center">
+                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-yellow-400 text-slate-950 shadow-lg shadow-yellow-500/30">
+                      <Wrench size={30} />
                     </div>
+                    <h3 className="line-clamp-2 text-xl font-black text-white">
+                      {service.tenDV}
+                    </h3>
+                  </div>
+                  <Star className="absolute right-4 top-4 fill-yellow-300 text-yellow-300" size={20} />
+                </div>
 
-                    <Star
-                      size={20}
-                      className="absolute top-3 right-3 text-yellow-400 fill-yellow-400"
-                    />
+                <div className="p-5">
+                  <div className="mb-4 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Giá dịch vụ
+                    </p>
+                    <p className="mt-1 text-2xl font-black text-red-600">
+                      {Number(service.giaTien).toLocaleString()}đ
+                    </p>
                   </div>
 
-                  {/* Card Body */}
-                  <div className="p-6">
-                    {/* Giá tiền */}
-                    <div className="mb-4 bg-yellow-50 p-4 rounded-lg border-2 border-yellow-200">
-                      <div className="text-center">
-                        <p className="text-sm text-gray-600 mb-1">
-                          Giá dịch vụ
-                        </p>
-                        <p className="text-2xl font-black text-red-600">
-                          {Number(service.giaTien).toLocaleString()}đ
-                        </p>
-                      </div>
-                    </div>
+                  <p className="mb-5 line-clamp-3 text-sm leading-6 text-slate-600">
+                    {service.moTa ||
+                      "Dịch vụ chuyên nghiệp với quy trình kiểm tra rõ ràng và kỹ thuật viên nhiều kinh nghiệm."}
+                  </p>
 
-                    {/* Mô tả */}
-                    <div className="mb-4">
-                      <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
-                        {service.moTa ||
-                          "Dịch vụ chuyên nghiệp, đảm bảo chất lượng cao với đội ngũ kỹ thuật viên giàu kinh nghiệm."}
-                      </p>
-                    </div>
-
-                    {/* Tính năng */}
-                    <div className="flex items-center justify-center gap-4 mb-4 text-xs text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Clock size={16} className="text-yellow-600" />
-                        <span>Nhanh chóng</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Star size={16} className="text-yellow-600" />
-                        <span>Uy tín</span>
-                      </div>
-                    </div>
-
-                    {/* Button */}
-                    <a href="tel:0944799819">
-                      <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
-                        Đặt dịch vụ ngay
-                      </button>
-                    </a>
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-500">
+                    <span className="inline-flex items-center gap-1">
+                      <Clock size={15} className="text-yellow-600" />
+                      Nhanh chóng
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <ShieldCheck size={15} className="text-emerald-600" />
+                      Uy tín
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* Nút xem tất cả */}
-            <div className="text-center">
-              <button
-                onClick={() => {
-                  navigate("/services");
-                }}
-                className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-4 px-10 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-lg inline-flex items-center gap-2"
-              >
-                Xem tất cả dịch vụ
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 7l5 5m0 0l-5 5m5-5H6"
-                  />
-                </svg>
               </button>
-            </div>
-          </>
+            ))}
+          </div>
         )}
       </div>
     </section>

@@ -23,8 +23,32 @@ export default function GarageWebsite() {
     window.scrollTo(0, 0);
   }, [currentView]);
 
+  useEffect(() => {
+    const revealItems = document.querySelectorAll("[data-reveal]");
+
+    if (!("IntersectionObserver" in window)) {
+      revealItems.forEach((item) => item.classList.add("is-visible"));
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.16, rootMargin: "0px 0px -60px 0px" }
+    );
+
+    revealItems.forEach((item) => observer.observe(item));
+    return () => observer.disconnect();
+  }, [currentView]);
+
   return (
-    <div className="min-h-screen bg-white">
+    <div className="home-page min-h-screen bg-white">
       <TopBar />
       <Header isScrolled={isScrolled} currentView={currentView} setCurrentView={setCurrentView} />
 

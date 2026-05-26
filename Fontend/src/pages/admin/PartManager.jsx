@@ -14,6 +14,7 @@ import {
   X,
   Image,
 } from "lucide-react";
+import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const API = "/admin/parts";
 const PAGE_SIZE = 10;
@@ -199,26 +200,26 @@ export default function PartManager() {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 flex justify-between items-center">
-          <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-4">
-            <Package className="text-indigo-600" size={44} />
+        <div className="mb-8 flex justify-between items-center gap-4">
+          <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
+            <Package className="text-indigo-600" size={40} />
             Quản Lý Phụ Tùng
           </h1>
           <button
             onClick={() => openForm()}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition"
           >
             <Plus size={24} className="inline mr-2" /> Thêm phụ tùng
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-200">
-          <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-            <Search size={28} className="text-indigo-600" />
+        <CollapsibleFilter title="Bộ lọc & Sắp xếp" icon={Search}>
+          <h3 className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-3">
+            <Search size={24} className="text-indigo-600" />
             Bộ lọc & Sắp xếp
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="relative">
               <Search
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
@@ -229,7 +230,7 @@ export default function PartManager() {
                 placeholder="Tìm mã hoặc tên phụ tùng..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none text-lg"
+                className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none text-base"
               />
             </div>
 
@@ -238,7 +239,7 @@ export default function PartManager() {
               placeholder="Giá từ (đ)"
               value={priceFrom}
               onChange={(e) => setPriceFrom(e.target.value)}
-              className="px-6 py-4 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 outline-none text-lg placeholder-gray-500"
+              className="px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 outline-none text-base placeholder-gray-500"
             />
 
             <input
@@ -246,7 +247,7 @@ export default function PartManager() {
               placeholder="Giá đến (đ)"
               value={priceTo}
               onChange={(e) => setPriceTo(e.target.value)}
-              className="px-6 py-4 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:ring-4 focus:ring-red-100 outline-none text-lg placeholder-gray-500"
+              className="px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:ring-4 focus:ring-red-100 outline-none text-base placeholder-gray-500"
             />
 
             <div className="relative">
@@ -259,14 +260,14 @@ export default function PartManager() {
                 placeholder="Tồn kho dưới... (cảnh báo)"
                 value={stockUnder}
                 onChange={(e) => setStockUnder(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 border-2 border-orange-300 rounded-xl focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none text-lg"
+                className="w-full pl-12 pr-4 py-3 border-2 border-orange-300 rounded-xl focus:border-orange-500 focus:ring-4 focus:ring-orange-100 outline-none text-base"
               />
             </div>
 
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-6 py-4 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 outline-none text-lg font-medium"
+              className="px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 outline-none text-base font-medium"
             >
               <option value="maPT">Mã phụ tùng</option>
               <option value="tenPT">Tên phụ tùng</option>
@@ -276,7 +277,7 @@ export default function PartManager() {
 
             <button
               onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-              className="px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition text-lg"
+              className="px-5 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-bold flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition text-base"
             >
               <ArrowUpDown size={22} />
               {sortDir === "asc" ? "Tăng dần" : "Giảm dần"}
@@ -287,13 +288,13 @@ export default function PartManager() {
             <div className="mt-6 text-center">
               <button
                 onClick={resetFilters}
-                className="text-red-600 hover:text-red-800 font-bold underline text-lg"
+                className="text-red-600 hover:text-red-800 font-bold underline text-sm"
               >
                 Xóa tất cả bộ lọc
               </button>
             </div>
           )}
-        </div>
+        </CollapsibleFilter>
 
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {loading ? (

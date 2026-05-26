@@ -12,6 +12,7 @@ import {
   Edit2,
   Trash2,
 } from "lucide-react";
+import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const VAI_TRO_OPTIONS = ["Lễ tân", "Kỹ thuật viên", "Quản lý", "Quản trị viên"];
 
@@ -179,43 +180,43 @@ export default function EmployeeManager() {
     <div className="min-h-screen bg-gray-50 py-8 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-10">
-          <h1 className="text-5xl font-bold text-gray-800 flex items-center gap-4">
-            <User size={48} className="text-indigo-600" />
+        <div className="flex justify-between items-center gap-4 mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
+            <User size={40} className="text-indigo-600" />
             Quản Lý Nhân Viên
           </h1>
           <button
             onClick={openAddModal}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-xl shadow-xl hover:shadow-2xl transition flex items-center gap-3"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition flex items-center gap-3"
           >
-            <Plus size={28} />
+            <Plus size={22} />
             Thêm nhân viên mới
           </button>
         </div>
 
         {/* Bộ lọc */}
-        <div className="bg-white rounded-3xl shadow-2xl p-8 mb-10">
-          <div className="flex items-center gap-4 mb-6">
-            <Search size={32} className="text-indigo-600" />
-            <h2 className="text-3xl font-bold text-gray-800">Tìm kiếm & Lọc</h2>
+        <CollapsibleFilter title="Tìm kiếm & Lọc" icon={Search}>
+          <div className="flex items-center gap-3 mb-5">
+            <Search size={24} className="text-indigo-600" />
+            <h2 className="text-xl font-bold text-gray-800">Tìm kiếm & Lọc</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <input
               placeholder="Mã nhân viên"
               value={filters.maNV}
               onChange={(e) => setFilters({ ...filters, maNV: e.target.value })}
-              className="px-6 py-4 border-2 border-gray-300 rounded-2xl text-lg focus:ring-4 focus:ring-indigo-300"
+              className="px-4 py-3 border-2 border-gray-300 rounded-xl text-base focus:ring-4 focus:ring-indigo-300"
             />
             <input
               placeholder="Họ và tên"
               value={filters.hoTen}
               onChange={(e) => setFilters({ ...filters, hoTen: e.target.value })}
-              className="px-6 py-4 border-2 border-gray-300 rounded-2xl text-lg focus:ring-4 focus:ring-indigo-300"
+              className="px-4 py-3 border-2 border-gray-300 rounded-xl text-base focus:ring-4 focus:ring-indigo-300"
             />
             <select
               value={filters.vaiTro}
               onChange={(e) => setFilters({ ...filters, vaiTro: e.target.value })}
-              className="px-6 py-4 border-2 border-gray-300 rounded-2xl text-lg focus:ring-4 focus:ring-indigo-300"
+              className="px-4 py-3 border-2 border-gray-300 rounded-xl text-base focus:ring-4 focus:ring-indigo-300"
             >
               <option value="">Tất cả vai trò</option>
               {VAI_TRO_OPTIONS.map((vt) => (
@@ -225,7 +226,7 @@ export default function EmployeeManager() {
             <select
               value={filters.maChiNhanh}
               onChange={(e) => setFilters({ ...filters, maChiNhanh: e.target.value })}
-              className="px-6 py-4 border-2 border-gray-300 rounded-2xl text-lg focus:ring-4 focus:ring-indigo-300"
+              className="px-4 py-3 border-2 border-gray-300 rounded-xl text-base focus:ring-4 focus:ring-indigo-300"
             >
               <option value="">Tất cả chi nhánh</option>
               {branches.map((b) => (
@@ -235,7 +236,7 @@ export default function EmployeeManager() {
               ))}
             </select>
           </div>
-        </div>
+        </CollapsibleFilter>
 
         {/* Danh sách nhân viên */}
         {loading ? (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance"; 
 import { Plus, Search, DollarSign, Edit3, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const API = "/admin/services";
 const PAGE_SIZE = 10;
@@ -93,48 +94,48 @@ export default function ServiceManager() {
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
-        <div className="mb-10 flex justify-between items-center">
-          <h1 className="text-5xl font-bold text-gray-800 flex items-center gap-5">
-            <DollarSign className="text-green-600" size={56} />
+        <div className="mb-8 flex justify-between items-center gap-4">
+          <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-3">
+            <DollarSign className="text-green-600" size={40} />
             Quản Lý Dịch Vụ
           </h1>
           <button
             onClick={() => openForm()}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-xl shadow-2xl hover:shadow-3xl transition flex items-center gap-4"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold text-base shadow-lg hover:shadow-xl transition flex items-center gap-3"
           >
             <Plus size={28} /> Thêm dịch vụ mới
           </button>
         </div>
 
         {/* Bộ lọc */}
-        <div className="bg-white rounded-3xl shadow-2xl p-10 mb-10">
-          <h3 className="text-3xl font-bold mb-8 text-gray-800 flex items-center gap-4">
-            <Search size={32} className="text-indigo-600" />
+        <CollapsibleFilter title="Bộ lọc tìm kiếm" icon={Search}>
+          <h3 className="text-xl font-bold mb-5 text-gray-800 flex items-center gap-3">
+            <Search size={24} className="text-indigo-600" />
             Bộ lọc tìm kiếm
           </h3>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Tìm kiếm */}
             <div className="relative">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={26} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
                 placeholder="Tìm mã dịch vụ, tên dịch vụ..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full pl-16 pr-6 py-5 text-lg border-2 border-gray-300 rounded-2xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none"
+                className="w-full pl-12 pr-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 outline-none"
               />
             </div>
 
             {/* Lọc giá */}
-            <div className="flex items-center gap-4">
-              <DollarSign className="text-green-600" size={26} />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center lg:col-span-2">
+              <DollarSign className="hidden text-green-600 sm:block" size={22} />
               <input
                 type="number"
                 placeholder="Giá từ (VNĐ)"
                 value={priceFrom}
                 onChange={e => setPriceFrom(e.target.value)}
-                className="flex-1 px-5 py-5 text-lg border-2 border-gray-300 rounded-2xl focus:border-green-500 focus:ring-4 focus:ring-green-100"
+                className="flex-1 px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100"
               />
               <span className="text-xl font-bold text-gray-600">→</span>
               <input
@@ -142,25 +143,26 @@ export default function ServiceManager() {
                 placeholder="Giá đến (VNĐ)"
                 value={priceTo}
                 onChange={e => setPriceTo(e.target.value)}
-                className="flex-1 px-5 py-5 text-lg border-2 border-gray-300 rounded-2xl focus:border-green-500 focus:ring-4 focus:ring-green-100"
+                className="flex-1 px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100"
               />
             </div>
           </div>
 
           {/* Nút xóa lọc */}
           {(search || priceFrom || priceTo) && (
-            <div className="text-center mt-10">
+            <div className="text-center mt-5">
               <button
                 onClick={resetFilters}
-                className="text-red-600 hover:text-red-800 font-bold text-xl underline"
+                className="text-red-600 hover:text-red-800 font-bold text-sm underline"
               >
                 Xóa tất cả bộ lọc
               </button>
             </div>
           )}
-        </div>
+        </CollapsibleFilter>
 
         {/* Bảng dịch vụ */}
+
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
           {loading ? (
             <div className="text-center py-32 text-2xl text-gray-500">Đang tải dịch vụ...</div>
@@ -275,3 +277,4 @@ export default function ServiceManager() {
     </div>
   );
 }
+

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../api/axiosInstance"; 
+import { CalendarCheck, Clock, Lock, MessageSquareText } from "lucide-react";
+import axiosInstance from "../../api/axiosInstance";
 
 const API_BASE = `/customer`;
 
@@ -8,20 +9,16 @@ export default function ContactSection() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const isLoggedIn = !!token;
-
   const userData = JSON.parse(localStorage.getItem("user") || "{}");
-  const maKH = userData.username || ""; 
-  console.log("Mã khách hàng từ localStorage:", maKH);
-  console.log("Mã khách hàng từ localStorage:", userData);
+  const maKH = userData.username || "";
 
   const [formData, setFormData] = useState({
-    ngayHen: '',
-    gioHen: '',
-    ghiChu: ''
+    ngayHen: "",
+    gioHen: "",
+    ghiChu: "",
   });
-
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,133 +35,156 @@ export default function ContactSection() {
     }
 
     setLoading(true);
-    setMessage('');
+    setMessage("");
 
     try {
-      const payload = {
-        maKH: maKH, 
+      await axiosInstance.post(`${API_BASE}/bookings`, {
+        maKH,
         ngayHen: formData.ngayHen,
         gioHen: formData.gioHen,
         ghiChu: formData.ghiChu.trim() || null,
-        trangThai: "Chờ xác nhận"
-      };
-
-      await axiosInstance.post(`${API_BASE}/bookings`, payload);
+        trangThai: "Chờ xác nhận",
+      });
 
       setMessage("Đặt lịch hẹn thành công! Chúng tôi sẽ liên hệ xác nhận sớm nhất.");
-      setFormData({ngayHen: '', gioHen: '', ghiChu: '' });
+      setFormData({ ngayHen: "", gioHen: "", ghiChu: "" });
     } catch (err) {
-      const errorMsg = err.response?.data?.message || err.response?.data || err.message || "Đặt lịch thất bại!";
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data ||
+        err.message ||
+        "Đặt lịch thất bại!";
       setMessage("Lỗi: " + errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLoginRedirect = () => {
-    navigate("/login");
-  };
-
   return (
-    <section id="contact" className="py-20 bg-gradient-to-b from-gray-900 to-black text-white">
-      <div className="container mx-auto px-4">
-        <h2 className="text-4xl font-bold text-center mb-4 text-yellow-400">
-          Đặt Lịch Hẹn Sửa Chữa
-        </h2>
-        <p className="text-center text-gray-300 mb-12 max-w-2xl mx-auto">
-          Vui lòng chọn ngày giờ phù hợp. Chúng tôi sẽ liên hệ xác nhận sớm nhất!
-        </p>
-        <div className="w-32 h-1 bg-yellow-400 mx-auto mb-12"></div>
+    <section id="contact" className="relative overflow-hidden bg-slate-950 py-16 text-white sm:py-20">
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-20"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1613214150384-0b9974f7f7a3?w=1800&h=1000&fit=crop')",
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" />
 
-        <div className="max-w-2xl mx-auto">
+      <div className="relative z-10 mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+        <div className="flex flex-col justify-center" data-reveal>
+          <div className="mb-4 inline-flex w-fit items-center gap-2 rounded-full bg-yellow-400 px-3 py-1 text-sm font-black text-slate-950">
+            <CalendarCheck size={16} />
+            Đặt lịch trực tuyến
+          </div>
+          <h2 className="text-3xl font-black sm:text-5xl">
+            Chọn thời gian, gửi yêu cầu, garage xác nhận lại.
+          </h2>
+          <p className="mt-5 max-w-xl leading-8 text-slate-300">
+            Form đặt lịch được tối ưu để khách thao tác nhanh trên điện thoại.
+            Sau khi gửi, lịch hẹn sẽ được lưu vào hệ thống để dễ theo dõi.
+          </p>
+
+          <div className="mt-8 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+              <Clock className="mb-3 text-yellow-300" size={24} />
+              <p className="font-bold">Giờ làm việc</p>
+              <p className="mt-1 text-sm text-slate-300">08:00 - 17:00 hằng ngày</p>
+            </div>
+            <div className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
+              <MessageSquareText className="mb-3 text-emerald-300" size={24} />
+              <p className="font-bold">Xác nhận nhanh</p>
+              <p className="mt-1 text-sm text-slate-300">Garage liên hệ lại sau khi nhận lịch</p>
+            </div>
+          </div>
+        </div>
+
+        <div data-reveal>
           {!isLoggedIn ? (
-            <div className="bg-gray-800 p-10 rounded-2xl shadow-2xl text-center">
-              <div className="text-6xl mb-6">🔒</div>
-              <h3 className="text-2xl font-bold mb-4">Yêu cầu đăng nhập</h3>
-              <p className="text-gray-300 mb-8">
+            <div className="rounded-2xl border border-white/10 bg-white/10 p-6 text-center shadow-2xl backdrop-blur sm:p-8">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-yellow-400 text-slate-950">
+                <Lock size={32} />
+              </div>
+              <h3 className="text-2xl font-black">Yêu cầu đăng nhập</h3>
+              <p className="mx-auto mt-4 max-w-md text-slate-300">
                 Bạn cần đăng nhập tài khoản khách hàng để đặt lịch và theo dõi trạng thái sửa chữa.
               </p>
               <button
-                onClick={handleLoginRedirect}
-                className="bg-yellow-400 text-gray-900 font-bold py-4 px-10 rounded-xl hover:bg-yellow-500 transition transform hover:scale-105 shadow-lg"
+                onClick={() => navigate("/login")}
+                className="mt-7 rounded-xl bg-yellow-400 px-6 py-3 font-black text-slate-950 shadow-lg shadow-yellow-500/20 transition hover:-translate-y-0.5 hover:bg-yellow-300"
               >
-                ĐĂNG NHẬP NGAY
+                Đăng nhập ngay
               </button>
             </div>
           ) : (
-            <div className="bg-gray-800 p-10 rounded-2xl shadow-2xl">
-              <div className="mb-8 text-center">
-                <p className="text-sm text-gray-400">Đang đặt lịch cho khách hàng:</p>
-                <p className="text-2xl font-bold text-yellow-400">{maKH}</p>
+            <form
+              onSubmit={handleSubmit}
+              className="rounded-2xl border border-white/10 bg-white/10 p-6 shadow-2xl backdrop-blur sm:p-8"
+            >
+              <div className="mb-6 rounded-2xl bg-slate-950/60 p-4 text-center">
+                <p className="text-sm text-slate-400">Đang đặt lịch cho khách hàng</p>
+                <p className="mt-1 text-2xl font-black text-yellow-300">{maKH}</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Ngày hẹn *</label>
-                    <input
-                      type="date"
-                      min={new Date().toISOString().split('T')[0]}
-                      value={formData.ngayHen}
-                      onChange={(e) => setFormData({...formData, ngayHen: e.target.value})}
-                      className="w-full px-5 py-4 rounded-lg bg-gray-700 border border-gray-600 text-white focus:border-yellow-400 focus:outline-none transition"
-                      required
-                    />
-                  </div>
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-bold">Ngày hẹn *</label>
+                  <input
+                    type="date"
+                    min={new Date().toISOString().split("T")[0]}
+                    value={formData.ngayHen}
+                    onChange={(e) => setFormData({ ...formData, ngayHen: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-5 py-4 text-white outline-none transition focus:border-yellow-300"
+                    required
+                  />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Giờ hẹn *</label>
-                    <input
-                      type="time"
-                      min="08:00"
-                      max="17:00"
-                      value={formData.gioHen}
-                      onChange={(e) => setFormData({...formData, gioHen: e.target.value})}
-                      className="w-full px-5 py-4 rounded-lg bg-gray-700 border border-gray-600 text-white focus:border-yellow-400 focus:outline-none transition"
-                      required
-                    />
-                    <p className="text-xs text-gray-400 mt-1">Giờ làm việc: 8:00 - 17:00</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Mô tả vấn đề</label>
-                    <textarea
-                      rows="4"
-                      placeholder="Mô tả chi tiết để chúng tôi chuẩn bị tốt hơn (lỗi lạ, tiếng động, đèn báo...)"
-                      value={formData.ghiChu}
-                      onChange={(e) => setFormData({...formData, ghiChu: e.target.value})}
-                      className="w-full px-5 py-4 rounded-lg bg-gray-700 border border-gray-600 text-white focus:border-yellow-400 focus:outline-none transition resize-none"
-                    />
-                  </div>
+                <div>
+                  <label className="mb-2 block text-sm font-bold">Giờ hẹn *</label>
+                  <input
+                    type="time"
+                    min="08:00"
+                    max="17:00"
+                    value={formData.gioHen}
+                    onChange={(e) => setFormData({ ...formData, gioHen: e.target.value })}
+                    className="w-full rounded-xl border border-white/10 bg-slate-950/70 px-5 py-4 text-white outline-none transition focus:border-yellow-300"
+                    required
+                  />
+                  <p className="mt-1 text-xs text-slate-400">Giờ làm việc: 08:00 - 17:00</p>
                 </div>
 
-                {message && (
-                  <div className={`p-4 rounded-lg text-center font-medium ${
+                <div className="md:col-span-2">
+                  <label className="mb-2 block text-sm font-bold">Mô tả vấn đề</label>
+                  <textarea
+                    rows="4"
+                    placeholder="Ví dụ: xe phát tiếng lạ, đèn báo lỗi, cần kiểm tra phanh..."
+                    value={formData.ghiChu}
+                    onChange={(e) => setFormData({ ...formData, ghiChu: e.target.value })}
+                    className="w-full resize-none rounded-xl border border-white/10 bg-slate-950/70 px-5 py-4 text-white outline-none transition placeholder:text-slate-500 focus:border-yellow-300"
+                  />
+                </div>
+              </div>
+
+              {message && (
+                <div
+                  className={`mt-5 rounded-xl p-4 text-center font-bold ${
                     message.includes("thành công")
-                      ? "bg-green-900/50 text-green-300 border border-green-600"
-                      : "bg-red-900/50 text-red-300 border border-red-600"
-                  }`}>
-                    {message}
-                  </div>
-                )}
-
-                <div className="text-center pt-6">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className={`px-14 py-5 rounded-xl font-bold text-xl shadow-lg transition transform hover:scale-105 ${
-                      loading
-                        ? "bg-gray-600 cursor-not-allowed"
-                        : "bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 hover:from-yellow-500 hover:to-yellow-600"
-                    }`}
-                  >
-                    {loading ? "Đang gửi yêu cầu..." : "GỬI ĐẶT LỊCH"}
-                  </button>
+                      ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-200"
+                      : "border border-red-500/40 bg-red-500/15 text-red-200"
+                  }`}
+                >
+                  {message}
                 </div>
-              </form>
-            </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-6 w-full rounded-xl bg-yellow-400 px-6 py-4 font-black text-slate-950 shadow-lg shadow-yellow-500/20 transition hover:-translate-y-0.5 hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? "Đang gửi yêu cầu..." : "Gửi đặt lịch"}
+              </button>
+            </form>
           )}
         </div>
       </div>

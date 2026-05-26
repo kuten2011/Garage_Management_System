@@ -15,12 +15,13 @@ import {
   Filter,
   X,
 } from "lucide-react";
+import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const API_BASE = "/admin";
 const PAGE_SIZE = 10;
 
 const addSchema = z.object({
-  maKH: z.string().min(1, "Vui lòng nhập mã khách hàng"),
+  maKH: z.string().min(1, "Vui lòng chọn khách hàng"),
   ngayHen: z.string().min(1, "Chọn ngày hẹn"),
   gioHen: z.string().min(1, "Chọn giờ hẹn"),
   trangThai: z.enum(["Chờ xác nhận", "Đã xác nhận", "Hoàn thành"]),
@@ -42,6 +43,7 @@ export default function BookingManager() {
   const [dateTo, setDateTo] = useState("");
   const [showNote, setShowNote] = useState(false);
   const [selectedNote, setSelectedNote] = useState("");
+  const [customers, setCustomers] = useState([]);
 
   const {
     register,
@@ -78,9 +80,24 @@ export default function BookingManager() {
     }
   };
 
+  const fetchCustomers = async () => {
+    try {
+      const res = await axiosInstance.get(`${API_BASE}/customers`, {
+        params: { page: 0, size: 1000 },
+      });
+      setCustomers(Array.isArray(res.data?.content) ? res.data.content : res.data || []);
+    } catch (err) {
+      console.error("Không thể tải danh sách khách hàng", err);
+      setCustomers([]);
+    }
+  };
   useEffect(() => {
     fetchData();
   }, [page, searchTerm, filterStatus, dateFrom, dateTo]);
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
 
   const resetFilters = () => {
     setSearchTerm("");
@@ -120,7 +137,13 @@ export default function BookingManager() {
       setValue("ghiChu", item.ghiChu || "");
       setIsEditing(true);
     } else {
-      reset();
+      reset({
+        maKH: "",
+        ngayHen: "",
+        gioHen: "",
+        trangThai: "Chờ xác nhận",
+        ghiChu: "",
+      });
       setIsEditing(false);
     }
     setShowForm(true);
@@ -159,7 +182,7 @@ export default function BookingManager() {
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+        <CollapsibleFilter title="Bộ lọc tìm kiếm" icon={Filter}>
           <div className="flex items-center gap-3 mb-5">
             <Filter size={24} className="text-indigo-600" />
             <h3 className="text-xl font-bold text-gray-800">Bộ lọc tìm kiếm</h3>
@@ -232,7 +255,7 @@ export default function BookingManager() {
               </button>
             </div>
           )}
-        </div>
+        </CollapsibleFilter>
 
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
@@ -439,11 +462,21 @@ export default function BookingManager() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <input
+                    <label className="mb-2 block text-sm font-semibold text-gray-700">
+                      Khách hàng
+                    </label>
+                    <select
                       {...register("maKH")}
-                      placeholder="Mã khách hàng (VD: KH001)"
-                      className="w-full px-5 py-4 border-2 border-gray-300 rounded-xl focus:ring-4 focus:ring-indigo-300 outline-none"
-                    />
+                      className="w-full px-5 py-4 border-2 border-gray-300 rounded-xl bg-white focus:ring-4 focus:ring-indigo-300 outline-none"
+                    >
+                      <option value="">Chọn khách hàng</option>
+                      {customers.map((customer) => (
+                        <option key={customer.maKH} value={customer.maKH}>
+                          {customer.maKH} - {customer.hoTen || "Không tên"}
+                          {customer.sdt ? ` (${customer.sdt})` : ""}
+                        </option>
+                      ))}
+                    </select>
                     {errors.maKH && (
                       <p className="text-red-500 text-sm mt-1">
                         {errors.maKH.message}
