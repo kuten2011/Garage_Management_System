@@ -5,6 +5,7 @@ import DACNTT.garage.dto.EmployeeDTO;
 import DACNTT.garage.mapper.EmployeeMapper;
 import DACNTT.garage.model.Branch;
 import DACNTT.garage.model.Employee;
+import DACNTT.garage.repository.BranchRepository;
 import DACNTT.garage.repository.EmployeeRepository;
 import DACNTT.garage.util.Enum.Role;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private BranchRepository branchRepository;
 
     @Override
     public List<Employee> getAllEmployees() {
@@ -35,30 +38,16 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public Employee createEmployee(EmployeeDTO dto) {
-        // 1. Tự động sinh mã nhân viên
         String newMaNV = generateNextMaNV();
         dto.setMaNV(newMaNV);
 
-        // 2. Chuyển DTO sang Entity (mapper sẽ bỏ qua role và chiNhanh)
         Employee employee = employeeMapper.toEmployee(dto);
-
-        // 3. Map vaiTro tiếng Việt → Role enum (thủ công vì DTO không có role)
         employee.setRole(mapVaiTroToRole(dto.getVaiTro()));
+        employee.setChiNhanh(resolveRequiredBranch(dto.getMaChiNhanh()));
 
-        // 4. Set chi nhánh (nếu có mã chi nhánh)
-        if (dto.getMaChiNhanh() != null && !dto.getMaChiNhanh().isBlank()) {
-            Branch branch = new Branch();
-            branch.setMaChiNhanh(dto.getMaChiNhanh().trim().toUpperCase());
-            employee.setChiNhanh(branch);
-        }
-
-        // 5. Lưu vào DB
         return employeeRepository.save(employee);
     }
 
-    /**
-     * Sinh mã nhân viên tiếp theo: NV001, NV002, ...
-     */
     private String generateNextMaNV() {
         List<Employee> allEmployees = employeeRepository.findAll();
 
@@ -74,9 +63,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         return String.format("NV%03d", maxNumber + 1);
     }
 
-    /**
-     * Map từ vai trò hiển thị (tiếng Việt) sang Role enum của hệ thống
-     */
     private Role mapVaiTroToRole(String vaiTro) {
         if (vaiTro == null || vaiTro.isBlank()) {
             return Role.ROLE_EMPLOYEE;
@@ -90,9 +76,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         };
     }
 
-    /**
-     * Trả về danh sách vai trò để frontend hiển thị dropdown
-     */
     @Override
     public List<String> getAllVaiTro() {
         return List.of("Lễ tân", "Kỹ thuật viên", "Quản lý", "Quản trị viên");
@@ -100,7 +83,15 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public List<BranchDTO> getAllBranches() {
-        return null;
+        return branchRepository.findAll().stream()
+                .map(branch -> BranchDTO.builder()
+                        .maChiNhanh(branch.getMaChiNhanh())
+                        .tenChiNhanh(branch.getTenChiNhanh())
+                        .diaChi(branch.getDiaChi())
+                        .sdt(branch.getSdt())
+                        .email(branch.getEmail())
+                        .build())
+                .toList();
     }
 
     @Override
@@ -108,37 +99,39 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee existing = employeeRepository.findById(maNV)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên"));
 
-        if (dto.getHoTen() != null)
+        if (dto.getHoTen() != null) {
             existing.setHoTen(dto.getHoTen());
-
-        if (dto.getVaiTro() != null)
+        }
+        if (dto.getVaiTro() != null) {
             existing.setVaiTro(dto.getVaiTro());
-
-        if (dto.getSdt() != null)
+            existing.setRole(mapVaiTroToRole(dto.getVaiTro()));
+        }
+        if (dto.getSdt() != null) {
             existing.setSdt(dto.getSdt());
-
-        if (dto.getEmail() != null)
+        }
+        if (dto.getEmail() != null) {
             existing.setEmail(dto.getEmail());
-
-        // ĐỔI MẬT KHẨU – PHẢI ENCODE
+        }
         if (dto.getMatKhau() != null && !dto.getMatKhau().isBlank()) {
             existing.setMatKhau(passwordEncoder.encode(dto.getMatKhau()));
         }
-
-        // Map vai trò hiển thị → role hệ thống
-        if (dto.getVaiTro() != null) {
-            existing.setRole(mapVaiTroToRole(dto.getVaiTro()));
-        }
-
         if (dto.getMaChiNhanh() != null && !dto.getMaChiNhanh().isBlank()) {
-            Branch branch = new Branch();
-            branch.setMaChiNhanh(dto.getMaChiNhanh().trim().toUpperCase());
-            existing.setChiNhanh(branch);
+            existing.setChiNhanh(resolveRequiredBranch(dto.getMaChiNhanh()));
+        } else if (existing.getChiNhanh() == null) {
+            throw new RuntimeException("Nhân viên phải thuộc một chi nhánh");
         }
 
         return employeeRepository.save(existing);
     }
 
+    private Branch resolveRequiredBranch(String maChiNhanh) {
+        if (maChiNhanh == null || maChiNhanh.isBlank()) {
+            throw new RuntimeException("Nhân viên phải thuộc một chi nhánh");
+        }
+        String normalized = maChiNhanh.trim().toUpperCase();
+        return branchRepository.findById(normalized)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy chi nhánh: " + normalized));
+    }
 
     @Override
     public void deleteEmployee(String maNV) {

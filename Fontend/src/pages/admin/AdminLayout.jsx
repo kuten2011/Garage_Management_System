@@ -12,6 +12,7 @@ import {
   Hammer,
   Store,
   Inbox,
+  ShoppingCart,
   Menu as MenuIcon,
   X,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const menu = [
   { icon: Wrench, label: "Phiếu sửa chữa", path: "/admin/repairs" },
   { icon: Package, label: "Phụ tùng", path: "/admin/parts" },
   { icon: Hammer, label: "Dịch vụ", path: "/admin/services" },
+  { icon: ShoppingCart, label: "Đơn phụ tùng", path: "/admin/part-orders" },
   { icon: Users, label: "Nhân viên", path: "/admin/employees" },
   { icon: Users, label: "Khách hàng", path: "/admin/customers" },
   { icon: Car, label: "Xe", path: "/admin/vehicles" },

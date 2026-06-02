@@ -27,14 +27,15 @@ ON CONFLICT ("maNV") DO NOTHING;
 
 -- Xe
 INSERT INTO "Xe" (
-    "bienSo", "maKH", "hangXe", "mauXe", "soKm", "namSX",
+    "bienSo", "maKH", "maChiNhanh", "hangXe", "mauXe", "soKm", "namSX",
     "ngayBaoHanhDen", "ngayBaoDuongTiepTheo", "chuKyBaoDuongKm", "chuKyBaoDuongThang"
 ) VALUES
-('59A-12345', 'KH01', 'Toyota', 'Camry', 35000, 2019, '2026-12-31', '2026-06-01', 10000, 12),
-('51B-67890', 'KH02', 'Honda', 'Civic', 27000, 2020, '2027-03-15', '2026-09-01', 8000, 6),
-('50C-11223', 'KH03', 'Mazda', 'CX-5', 15000, 2022, '2028-10-22', '2026-04-22', 10000, 12)
+('59A-12345', 'KH01', 'CN01', 'Toyota', 'Camry', 35000, 2019, '2026-12-31', '2026-06-01', 10000, 12),
+('51B-67890', 'KH02', 'CN02', 'Honda', 'Civic', 27000, 2020, '2027-03-15', '2026-09-01', 8000, 6),
+('50C-11223', 'KH03', 'CN01', 'Mazda', 'CX-5', 15000, 2022, '2028-10-22', '2026-04-22', 10000, 12)
 ON CONFLICT ("bienSo") DO UPDATE SET
     "maKH" = EXCLUDED."maKH",
+    "maChiNhanh" = EXCLUDED."maChiNhanh",
     "hangXe" = EXCLUDED."hangXe",
     "mauXe" = EXCLUDED."mauXe",
     "soKm" = EXCLUDED."soKm",
@@ -43,6 +44,9 @@ ON CONFLICT ("bienSo") DO UPDATE SET
     "ngayBaoDuongTiepTheo" = EXCLUDED."ngayBaoDuongTiepTheo",
     "chuKyBaoDuongKm" = EXCLUDED."chuKyBaoDuongKm",
     "chuKyBaoDuongThang" = EXCLUDED."chuKyBaoDuongThang";
+
+UPDATE "NhanVien" SET "maChiNhanh" = 'CN01' WHERE "maChiNhanh" IS NULL;
+UPDATE "Xe" SET "maChiNhanh" = 'CN01' WHERE "maChiNhanh" IS NULL;
 
 -- Lịch hẹn
 INSERT INTO "LichHen" ("maLich", "maKH", "ngayHen", "gioHen", "trangThai", "ghiChu")
@@ -119,6 +123,8 @@ VALUES
 ('DV03', 'Tư vấn kỹ thuật', 200000, 'Tư vấn sửa chữa và bảo dưỡng')
 ON CONFLICT ("maDV") DO NOTHING;
 
+UPDATE "DichVu" SET "maChiNhanh" = 'CN01' WHERE "maChiNhanh" IS NULL;
+
 -- Phụ tùng
 INSERT INTO "PhuTung" ("maPT", "tenPT", "donGia", "soLuongTon", "hinhAnh")
 VALUES
@@ -126,19 +132,21 @@ VALUES
 ('PT02', 'Lọc dầu', 250000, 30, 'https://res.cloudinary.com/web-garage/image/upload/loc-dau_n2pyj2.jpg')
 ON CONFLICT ("maPT") DO NOTHING;
 
--- PHIẾU SỬA CHỮA (ĐÃ THÊM bienSo VÀO INSERT)
+UPDATE "PhuTung" SET "maChiNhanh" = 'CN01' WHERE "maChiNhanh" IS NULL;
+
+-- PHIẾU SỬA CHỮA (ĐÃ THÊM bienSo VÀ maChiNhanh VÀO INSERT)
 INSERT INTO "PhieuSuaChua" (
     "maPhieu", "maLich", "maNV", "ngayLap", "ghiChu", "trangThai",
-    "thanhToanStatus", "tongTien", "bienSo", "ngayHoanThanh"
+    "thanhToanStatus", "tongTien", "bienSo", "maChiNhanh", "ngayHoanThanh"
 ) VALUES
 ('PSC01', 'LH03', 'NV01', '2025-10-22', 'Bảo dưỡng định kỳ 10.000km + kiểm tra phanh + thay dầu',
- 'Hoàn thành', 'Đã thanh toán', 2350000, '50C-11223', '2025-10-22'),
+ 'Hoàn thành', 'Đã thanh toán', 2350000, '50C-11223', 'CN01', '2025-10-22'),
 
 ('PSC02', 'LH01', 'NV02', '2025-10-20', 'Xe không nổ máy, kiểm tra hệ thống khởi động',
- 'Hoàn thành', 'Đã thanh toán', 1800000, '59A-12345', '2025-10-21'),
+ 'Hoàn thành', 'Đã thanh toán', 1800000, '59A-12345', 'CN01', '2025-10-21'),
 
 ('PSC03', 'LH02', 'NV03', '2025-10-21', 'Đề xe không nổ, kiểm tra ắc quy và bugi',
- 'Hoàn thành', 'Chưa thanh toán', 1200000, '51B-67890', '2025-10-22')
+ 'Hoàn thành', 'Chưa thanh toán', 1200000, '51B-67890', 'CN02', '2025-10-22')
 ON CONFLICT ("maPhieu") DO UPDATE SET
     "maLich" = EXCLUDED."maLich",
     "maNV" = EXCLUDED."maNV",
@@ -148,7 +156,17 @@ ON CONFLICT ("maPhieu") DO UPDATE SET
     "thanhToanStatus" = EXCLUDED."thanhToanStatus",
     "tongTien" = EXCLUDED."tongTien",
     "bienSo" = EXCLUDED."bienSo",
+    "maChiNhanh" = EXCLUDED."maChiNhanh",
     "ngayHoanThanh" = EXCLUDED."ngayHoanThanh";
+
+UPDATE "PhieuSuaChua" p
+SET "maChiNhanh" = COALESCE(nv."maChiNhanh", x."maChiNhanh", 'CN01')
+FROM "NhanVien" nv, "Xe" x
+WHERE p."maChiNhanh" IS NULL
+  AND p."maNV" = nv."maNV"
+  AND p."bienSo" = x."bienSo";
+
+UPDATE "PhieuSuaChua" SET "maChiNhanh" = 'CN01' WHERE "maChiNhanh" IS NULL;
 
 -- CHI TIẾT SỬA CHỮA - PHỤ TÙNG
 INSERT INTO "CT_SuaChua_PhuTung" ("maPhieu", "maPT", "soLuong", "thanhTien")
@@ -168,9 +186,23 @@ ON CONFLICT ("maPhanHoi") DO NOTHING;
 -- Báo cáo
 INSERT INTO "BaoCao" ("maBC", "maChiNhanh", "thangNam", "doanhThu", "soXePhucVu")
 VALUES
-('BC01', 'CN01', '10/2025', 2500000, 12),
-('BC02', 'CN02', '10/2025', 1800000, 8)
-ON CONFLICT ("maBC") DO NOTHING;
+('BC01', 'CN01', '2025-10', 2500000, 12),
+('BC02', 'CN02', '2025-10', 1800000, 8)
+ON CONFLICT ("maBC") DO UPDATE SET
+    "maChiNhanh" = EXCLUDED."maChiNhanh",
+    "thangNam" = EXCLUDED."thangNam",
+    "doanhThu" = EXCLUDED."doanhThu",
+    "soXePhucVu" = EXCLUDED."soXePhucVu";
+
+UPDATE "BaoCao" SET "thangNam" = '2025-10' WHERE "thangNam" = '10/2025';
+UPDATE "BaoCao" SET "maChiNhanh" = 'CN01' WHERE "maChiNhanh" IS NULL;
+
+ALTER TABLE "NhanVien" ALTER COLUMN "maChiNhanh" SET NOT NULL;
+ALTER TABLE "Xe" ALTER COLUMN "maChiNhanh" SET NOT NULL;
+ALTER TABLE "PhieuSuaChua" ALTER COLUMN "maChiNhanh" SET NOT NULL;
+ALTER TABLE "DichVu" ALTER COLUMN "maChiNhanh" SET NOT NULL;
+ALTER TABLE "PhuTung" ALTER COLUMN "maChiNhanh" SET NOT NULL;
+ALTER TABLE "BaoCao" ALTER COLUMN "maChiNhanh" SET NOT NULL;
 
 -- ===============================
 -- DỮ LIỆU TỐI ƯU CHO RAG CHATBOT

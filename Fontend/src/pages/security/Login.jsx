@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import axiosInstance from "../../api/axiosInstance";
 import { useNavigate, Link } from "react-router-dom";
 import { LogIn, AlertCircle } from "lucide-react";
+import { notify } from "../../utils/notify";
 
 export default function AdminLogin() {
   //const [email, setEmail] = useState("admin@gara.com");
@@ -20,7 +21,7 @@ export default function AdminLogin() {
 
     try {
       const res = await axiosInstance.post(
-        "/web_garage/auth/login",
+        "/auth/login",
         { email, password },
         {
           headers: { "Content-Type": "application/json" },
@@ -29,6 +30,9 @@ export default function AdminLogin() {
 
       // Lưu token và thông tin user
       localStorage.setItem("token", res.data.jwt);
+      if (res.data.refreshToken) {
+        localStorage.setItem("refreshToken", res.data.refreshToken);
+      }
       localStorage.setItem("user", JSON.stringify(res.data));
 
       // Lấy roles từ authorities
@@ -39,7 +43,7 @@ export default function AdminLogin() {
 
       // Nếu là khách hàng → về trang chủ
       if (roles.includes("ROLE_CUSTOMER")) {
-        navigate("/", { replace: true });
+        navigate("/customer", { replace: true });
         return;
       }
 
@@ -49,10 +53,13 @@ export default function AdminLogin() {
       console.error("Lỗi đăng nhập:", err);
       if (err.response?.status === 401 || err.response?.status === 404) {
         setError("Email hoặc mật khẩu không đúng!");
+        notify("Email hoặc mật khẩu không đúng!", "error");
       } else if (err.response?.status === 403) {
         setError("Tài khoản bị khóa hoặc không có quyền truy cập!");
+        notify("Tài khoản bị khóa hoặc không có quyền truy cập!", "error");
       } else {
         setError("Lỗi kết nối server. Vui lòng thử lại sau!");
+        notify("Lỗi kết nối server. Vui lòng thử lại sau!", "error");
       }
     } finally {
       setLoading(false);

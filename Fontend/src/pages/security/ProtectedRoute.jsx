@@ -3,19 +3,26 @@ import { jwtDecode } from "jwt-decode";
 
 export default function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
+  const refreshToken = localStorage.getItem("refreshToken");
 
-  if (!token) return <Navigate to="/web_garage/auth/login" replace />;
+  if (!token && !refreshToken) return <Navigate to="/login" replace />;
 
   try {
-    const decoded = jwtDecode(token);
+    if (token) {
+      const decoded = jwtDecode(token);
 
-    if (decoded.exp * 1000 < Date.now()) {
-      localStorage.removeItem("token");
-      return <Navigate to="/web_garage/auth/login" replace />;
+      if (decoded.exp * 1000 < Date.now() && !refreshToken) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        return <Navigate to="/login" replace />;
+      }
     }
   } catch (err) {
-    localStorage.removeItem("token");
-    return <Navigate to="/web_garage/auth/login" replace />;
+    if (!refreshToken) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      return <Navigate to="/login" replace />;
+    }
   }
 
   return children;

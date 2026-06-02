@@ -12,7 +12,9 @@ public interface BranchService {
 
     Branch getById(String maChiNhanh);
 
-    Branch save(Branch branch);
+    Branch create(Branch branch);
+
+    Branch update(String maChiNhanh, Branch branch);
 
     void deleteById(String maChiNhanh);
 }

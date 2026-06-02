@@ -30,7 +30,7 @@ export default function CollapsibleFilter({
             <Icon size={22} />
           </span>
           <span className="min-w-0">
-            <span className="block text-lg font-bold text-gray-800">{title}</span>
+            <span className="block text-base font-bold text-gray-800 sm:text-lg">{title}</span>
             <span className="block text-sm text-gray-500">
               {open ? "Nhấn để thu gọn" : "Nhấn để mở bộ lọc"}
             </span>

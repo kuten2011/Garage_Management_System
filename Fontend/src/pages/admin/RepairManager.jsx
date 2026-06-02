@@ -13,6 +13,7 @@ import {
   ChevronRight,
   ClipboardList,
   Filter,
+  Building,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
@@ -22,6 +23,7 @@ const API = `${API_BASE}/repairs`;
 const BOOKING_API = `${API_BASE}/bookings`;
 const EMPLOYEE_API = `${API_BASE}/employees`;
 const VEHICLE_API = `${API_BASE}/vehicles`; // API lấy tất cả xe từ database
+const BRANCH_API = `${API_BASE}/branches`;
 const PAGE_SIZE = 10;
 
 export default function RepairManager() {
@@ -36,7 +38,9 @@ export default function RepairManager() {
   // Dữ liệu dropdown
   const [bookings, setBookings] = useState([]); // Lịch hẹn
   const [employees, setEmployees] = useState({}); // maNV → hoTen
+  const [employeeList, setEmployeeList] = useState([]);
   const [vehicles, setVehicles] = useState([]); // Danh sách xe từ DB (bienSo)
+  const [branches, setBranches] = useState([]);
 
   const [formData, setFormData] = useState({
     maLich: "",
@@ -45,23 +49,27 @@ export default function RepairManager() {
     ghiChu: "",
     trangThai: "Chờ tiếp nhận",
     bienSo: "",
+    maChiNhanh: "",
   });
 
   // Load nhân viên, lịch hẹn và xe từ database ngay khi component mount
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const [bookingRes, employeeRes, vehicleRes] = await Promise.all([
+        const [bookingRes, employeeRes, vehicleRes, branchRes] = await Promise.all([
           axiosInstance.get(BOOKING_API),
           axiosInstance.get(EMPLOYEE_API),
           axiosInstance.get(VEHICLE_API), // Lấy tất cả xe
+          axiosInstance.get(`${BRANCH_API}?page=0&size=100`),
         ]);
 
         const bookingList = bookingRes.data.content || bookingRes.data || [];
         setBookings(bookingList);
 
         const empMap = {};
-        (employeeRes.data.content || employeeRes.data || []).forEach((emp) => {
+        const loadedEmployees = employeeRes.data.content || employeeRes.data || [];
+        setEmployeeList(loadedEmployees);
+        loadedEmployees.forEach((emp) => {
           empMap[emp.maNV] = emp.hoTen || "Không tên";
         });
         setEmployees(empMap);
@@ -69,6 +77,7 @@ export default function RepairManager() {
         // Xe từ DB
         const vehicleList = vehicleRes.data.content || vehicleRes.data || [];
         setVehicles(vehicleList);
+        setBranches(branchRes.data.content || branchRes.data || []);
       } catch (err) {
         console.error("Lỗi tải dữ liệu dropdown:", err);
       }
@@ -95,6 +104,11 @@ export default function RepairManager() {
   useEffect(() => {
     fetchData();
   }, [page]);
+
+  const filteredEmployeesByBranch = useMemo(() => {
+    if (!formData.maChiNhanh) return [];
+    return employeeList.filter((emp) => emp.maChiNhanh === formData.maChiNhanh);
+  }, [employeeList, formData.maChiNhanh]);
 
   // Lọc dữ liệu
   const filteredData = useMemo(() => {
@@ -148,6 +162,7 @@ export default function RepairManager() {
         ghiChu: item.ghiChu || "",
         trangThai: item.trangThai || "Chờ tiếp nhận",
         bienSo: item.xe?.bienSo || "",
+        maChiNhanh: item.maChiNhanh || item.xe?.maChiNhanh || "",
       });
     } else {
       setEditingItem(null);
@@ -158,6 +173,7 @@ export default function RepairManager() {
         ghiChu: "",
         trangThai: "Chờ tiếp nhận",
         bienSo: "",
+        maChiNhanh: "",
       });
     }
     setShowForm(true);
@@ -165,6 +181,7 @@ export default function RepairManager() {
 
   const handleSave = async () => {
     if (!formData.maLich.trim()) return alert("Vui lòng chọn mã lịch hẹn!");
+    if (!formData.maChiNhanh.trim()) return alert("Vui lòng chọn chi nhánh!");
     if (!formData.bienSo.trim()) return alert("Vui lòng chọn biển số xe!");
 
     try {
@@ -213,10 +230,6 @@ export default function RepairManager() {
 
         {/* Tìm kiếm & lọc */}
         <CollapsibleFilter title="Tìm kiếm & Lọc phiếu" icon={Filter}>
-          <h3 className="mb-5 flex items-center gap-3 text-xl font-bold text-gray-800">
-            <Filter size={24} className="text-indigo-600" />
-            Tìm kiếm & Lọc phiếu
-          </h3>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
@@ -251,6 +264,7 @@ export default function RepairManager() {
                   <th className="px-4 py-4 text-left font-semibold">Mã Phiếu</th>
                   <th className="px-4 py-4 text-left font-semibold">Mã Lịch</th>
                   <th className="px-4 py-4 text-left font-semibold">Nhân Viên</th>
+                  <th className="px-4 py-4 text-left font-semibold">Chi Nhánh</th>
                   <th className="px-4 py-4 text-left font-semibold">Khách Hàng</th>
                   <th className="px-4 py-4 text-left font-semibold">Biển Số</th>
                   <th className="px-4 py-4 text-center font-semibold">Ngày Lập</th>
@@ -262,9 +276,9 @@ export default function RepairManager() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {loading ? (
-                  <tr><td colSpan="10" className="text-center py-12 text-gray-500">Đang tải...</td></tr>
+                  <tr><td colSpan="11" className="text-center py-12 text-gray-500">Đang tải...</td></tr>
                 ) : filteredData.length === 0 ? (
-                  <tr><td colSpan="10" className="text-center py-12 text-gray-400">Không có phiếu nào</td></tr>
+                  <tr><td colSpan="11" className="text-center py-12 text-gray-400">Không có phiếu nào</td></tr>
                 ) : (
                   filteredData.map((r) => (
                     <tr key={r.maPhieu} className="hover:bg-indigo-50/50 transition">
@@ -281,6 +295,12 @@ export default function RepairManager() {
                         ) : (
                           <span className="text-orange-600 font-medium">Chưa phân công</span>
                         )}
+                      </td>
+                      <td className="px-4 py-4 text-gray-700">
+                        <span className="inline-flex items-center gap-2">
+                          <Building size={16} className="text-indigo-600" />
+                          {r.tenChiNhanh || r.maChiNhanh || "-"}
+                        </span>
                       </td>
                       <td className="px-4 py-4 text-gray-800 font-medium">{r.khachHang?.hoTen || "N/A"}</td>
                       <td className="px-4 py-4 font-mono font-bold text-purple-700">{r.xe?.bienSo || "Chưa có"}</td>
@@ -386,6 +406,31 @@ export default function RepairManager() {
                   </select>
                 </div>
 
+                {/* Dropdown chi nhánh */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Chi nhánh *</label>
+                  <select
+                    value={formData.maChiNhanh}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        maChiNhanh: e.target.value,
+                        maNV: "",
+                        bienSo: "",
+                      })
+                    }
+                    className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm"
+                    required
+                  >
+                    <option value="">-- Chọn chi nhánh --</option>
+                    {branches.map((branch) => (
+                      <option key={branch.maChiNhanh} value={branch.maChiNhanh}>
+                        {branch.tenChiNhanh} ({branch.maChiNhanh})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 {/* Dropdown nhân viên */}
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700">Nhân viên phụ trách</label>
@@ -393,33 +438,34 @@ export default function RepairManager() {
                     value={formData.maNV}
                     onChange={(e) => setFormData({ ...formData, maNV: e.target.value })}
                     className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm"
+                    disabled={!formData.maChiNhanh}
                   >
-                    <option value="">-- Không phân công --</option>
-                    {Object.keys(employees).map((maNV) => (
-                      <option key={maNV} value={maNV}>
-                        {maNV} - {employees[maNV]}
+                    <option value="">-- Chọn chi nhánh trước --</option>
+                    {filteredEmployeesByBranch.map((emp) => (
+                      <option key={emp.maNV} value={emp.maNV}>
+                        {emp.maNV} - {emp.hoTen}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                {/* Dropdown biển số xe – LẤY TỪ DATABASE */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Biển số xe *</label>
-                  <select
-                    value={formData.bienSo}
-                    onChange={(e) => setFormData({ ...formData, bienSo: e.target.value })}
-                    className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm font-mono"
-                    required
-                  >
-                    <option value="">-- Chọn biển số xe --</option>
-                    {vehicles.map((vehicle) => (
-                      <option key={vehicle.bienSo} value={vehicle.bienSo}>
-                        {vehicle.bienSo} - {vehicle.mauXe || "Xe không xác định"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  {/* Dropdown biển số xe – LẤY TỪ DATABASE */}
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Biển số xe *</label>
+                    <select
+                      value={formData.bienSo}
+                      onChange={(e) => setFormData({ ...formData, bienSo: e.target.value })}
+                      className="w-full px-5 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-400 outline-none text-sm font-mono"
+                      required
+                    >
+                      <option value="">-- Chọn biển số xe --</option>
+                      {vehicles.map((vehicle) => (
+                        <option key={vehicle.bienSo} value={vehicle.bienSo}>
+                          {vehicle.bienSo} - {vehicle.mauXe || "Xe không xác định"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
                 <input
                   type="date"

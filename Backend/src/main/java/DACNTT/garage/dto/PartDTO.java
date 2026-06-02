@@ -14,5 +14,8 @@ public class PartDTO {
     private String tenPT;
     private Double donGia;
     private Integer soLuongTon;
+    private String moTa;
     private String hinhAnh;
+    private String maChiNhanh;
+    private String tenChiNhanh;
 }

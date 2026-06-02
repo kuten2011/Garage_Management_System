@@ -11,7 +11,7 @@ import lombok.*;
 public class Report {
 
     @Id
-    @Column(length = 10)
+    @Column(length = 20)
     private String maBC;
 
     @ManyToOne

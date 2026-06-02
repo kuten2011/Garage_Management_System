@@ -9,12 +9,14 @@ import {
   ArrowLeft,
   AlertCircle,
   Filter,
+  Eye,
+  ShoppingCart,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../../api/axiosInstance"; 
 import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
-const API = "/admin/parts";
+const API = "/public/parts";
 const DEFAULT_IMAGE = "https://placehold.net/400x400.png";
 const PAGE_SIZE = 8;
 
@@ -29,6 +31,7 @@ export default function PartsPage() {
   const [priceToInput, setPriceToInput] = useState("");
   const [stockFromInput, setStockFromInput] = useState("");
   const [stockToInput, setStockToInput] = useState("");
+  const [branchInput, setBranchInput] = useState("");
 
   // Filter states (giá trị thực tế dùng cho API)
   const [search, setSearch] = useState("");
@@ -36,6 +39,10 @@ export default function PartsPage() {
   const [priceTo, setPriceTo] = useState("");
   const [stockFrom, setStockFrom] = useState("");
   const [stockTo, setStockTo] = useState("");
+  const [branch, setBranch] = useState("");
+  const [branches, setBranches] = useState([]);
+  const [sortBy, setSortBy] = useState("maPT");
+  const [sortDir, setSortDir] = useState("asc");
 
   const navigate = useNavigate();
 
@@ -68,6 +75,21 @@ export default function PartsPage() {
     return () => clearTimeout(timer);
   }, [stockFromInput, stockToInput]);
 
+  useEffect(() => {
+    axiosInstance
+      .get("/public/branches?page=0&size=100")
+      .then((res) => setBranches(res.data?.content || res.data || []))
+      .catch(() => setBranches([]));
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setBranch(branchInput);
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [branchInput]);
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -77,6 +99,9 @@ export default function PartsPage() {
       if (priceTo) params.append("priceTo", priceTo);
       if (stockFrom) params.append("stockFrom", stockFrom);
       if (stockTo) params.append("stockTo", stockTo);
+      if (branch) params.append("maChiNhanh", branch);
+      params.append("sortBy", sortBy);
+      params.append("sortDir", sortDir);
 
       const res = await axiosInstance.get(`${API}?${params}`);
       const result = res.data;
@@ -91,7 +116,7 @@ export default function PartsPage() {
 
   useEffect(() => {
     fetchData();
-  }, [page, search, priceFrom, priceTo, stockFrom, stockTo]);
+  }, [page, search, priceFrom, priceTo, stockFrom, stockTo, branch, sortBy, sortDir]);
 
   const resetFilters = () => {
     setSearchInput("");
@@ -99,11 +124,15 @@ export default function PartsPage() {
     setPriceToInput("");
     setStockFromInput("");
     setStockToInput("");
+    setBranchInput("");
     setSearch("");
     setPriceFrom("");
     setPriceTo("");
     setStockFrom("");
     setStockTo("");
+    setBranch("");
+    setSortBy("maPT");
+    setSortDir("asc");
     setPage(0);
   };
 
@@ -146,13 +175,25 @@ export default function PartsPage() {
   };
 
   const handleBack = () => {
-    navigate("/");
+    navigate("/customer");
+  };
+
+  const addToCart = (part) => {
+    const current = JSON.parse(localStorage.getItem("partCart") || "[]");
+    const index = current.findIndex((item) => item.maPT === part.maPT);
+    if (index >= 0) {
+      current[index].soLuong = Number(current[index].soLuong || 1) + 1;
+    } else {
+      current.push({ ...part, soLuong: 1 });
+    }
+    localStorage.setItem("partCart", JSON.stringify(current));
+    navigate("/customer/cart");
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Hero Banner */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-10 sm:px-6 sm:py-16">
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-6 sm:px-6 sm:py-8">
         <div className="max-w-7xl mx-auto">
           <button
             onClick={handleBack}
@@ -163,9 +204,9 @@ export default function PartsPage() {
           </button>
 
           <div className="text-center">
-            <h1 className="text-3xl sm:text-5xl font-bold mb-4">TẤT CẢ PHỤ TÙNG</h1>
-            <p className="text-base sm:text-xl opacity-90">
-              Khám phá đầy đủ phụ tùng chính hãng, chất lượng cao
+            <h1 className="text-xl font-black tracking-tight sm:text-2xl">TẤT CẢ PHỤ TÙNG</h1>
+            <p className="mx-auto mt-2 max-w-xl text-xs opacity-90 sm:text-sm">
+              Khám phá phụ tùng chính hãng, chất lượng cao
             </p>
           </div>
         </div>
@@ -173,12 +214,7 @@ export default function PartsPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
         {/* Bộ lọc */}
-        <CollapsibleFilter title="Tìm kiếm và lọc phụ tùng" icon={Filter} accent="yellow">
-          <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-3">
-            <Filter size={28} className="text-yellow-600" />
-            Tìm kiếm và lọc phụ tùng
-          </h3>
-
+        <CollapsibleFilter title="Bộ lọc phụ tùng" icon={Filter} accent="yellow">
           <div className="space-y-6">
             {/* Tìm kiếm theo keyword */}
             <div>
@@ -198,6 +234,24 @@ export default function PartsPage() {
                   className="w-full pl-12 pr-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200 outline-none"
                 />
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Chi nhánh
+              </label>
+              <select
+                value={branchInput}
+                onChange={(e) => setBranchInput(e.target.value)}
+                className="w-full rounded-xl border-2 border-gray-300 px-4 py-3 text-base outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+              >
+                <option value="">Tất cả chi nhánh</option>
+                {branches.map((item) => (
+                  <option key={item.maChiNhanh} value={item.maChiNhanh}>
+                    {item.tenChiNhanh} ({item.maChiNhanh})
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Lọc giá */}
@@ -275,6 +329,32 @@ export default function PartsPage() {
                 </div>
               </div>
             </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Sắp xếp
+              </label>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="w-full rounded-xl border-2 border-gray-300 px-4 py-3 text-base outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+                >
+                  <option value="maPT">Theo mã</option>
+                  <option value="tenPT">Theo tên</option>
+                  <option value="donGia">Theo giá</option>
+                  <option value="soLuongTon">Theo tồn kho</option>
+                </select>
+                <select
+                  value={sortDir}
+                  onChange={(e) => setSortDir(e.target.value)}
+                  className="w-full rounded-xl border-2 border-gray-300 px-4 py-3 text-base outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+                >
+                  <option value="asc">Tăng dần</option>
+                  <option value="desc">Giảm dần</option>
+                </select>
+              </div>
+            </div>
           </div>
 
           {/* Nút xóa lọc */}
@@ -312,16 +392,16 @@ export default function PartsPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {data.content.map((part) => {
                 const stockStatus = getStockStatus(part.soLuongTon);
                 return (
                   <div
                     key={part.maPT}
-                    className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
+                    className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                   >
                     {/* Card Header */}
-                    <div className="h-48 bg-gray-100 relative overflow-hidden flex items-center justify-center">
+                    <div className="h-36 bg-gray-100 relative overflow-hidden flex items-center justify-center">
                       <img
                         src={part.hinhAnh || DEFAULT_IMAGE}
                         alt={part.tenPT}
@@ -345,21 +425,21 @@ export default function PartsPage() {
                     </div>
 
                     {/* Card Body */}
-                    <div className="p-5">
+                    <div className="p-4">
                       {/* Giá tiền */}
-                      <div className="mb-3 bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200">
+                      <div className="mb-2 bg-yellow-50 p-2.5 rounded-xl border border-yellow-200">
                         <div className="text-center">
-                          <p className="text-xs text-gray-600 mb-1">
+                          <p className="text-[11px] text-gray-600 mb-1">
                             Giá phụ tùng
                           </p>
-                          <p className="text-xl font-black text-red-600">
+                          <p className="text-lg font-black text-red-600">
                             {Number(part.donGia).toLocaleString()}đ
                           </p>
                         </div>
                       </div>
 
                       {/* Tính năng */}
-                      <div className="flex items-center justify-center gap-3 mb-3 text-xs text-gray-500">
+                      <div className="flex items-center justify-center gap-3 mb-3 text-[11px] text-gray-500">
                         <div className="flex items-center gap-1">
                           <Clock size={14} className="text-yellow-600" />
                           <span>Giao nhanh</span>
@@ -370,26 +450,27 @@ export default function PartsPage() {
                         </div>
                       </div>
 
-                      {/* Button */}
-                      <a
-                        href={
-                          part.soLuongTon === 0 ? undefined : "tel:0944799819"
-                        }
-                        className={
-                          part.soLuongTon === 0 ? "pointer-events-none" : ""
-                        }
-                      >
+                      <div className="grid grid-cols-1 gap-2">
                         <button
-                          className={`w-full font-bold py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg ${
+                          onClick={() => navigate(`/customer/parts/${part.maPT}`)}
+                          className="inline-flex items-center justify-center gap-2 w-full font-semibold py-2.5 rounded-xl border border-gray-300 text-gray-800 hover:bg-gray-50 transition text-sm"
+                        >
+                          <Eye size={18} />
+                          Xem chi tiết
+                        </button>
+                        <button
+                          onClick={() => addToCart(part)}
+                          className={`inline-flex items-center justify-center gap-2 w-full font-bold py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg text-sm ${
                             part.soLuongTon === 0
                               ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                               : "bg-yellow-400 hover:bg-yellow-500 text-gray-900"
                           }`}
                           disabled={part.soLuongTon === 0}
                         >
-                          {part.soLuongTon === 0 ? "Hết hàng" : "Đặt mua ngay"}
+                          <ShoppingCart size={18} />
+                          {part.soLuongTon === 0 ? "Hết hàng" : "Thêm vào giỏ"}
                         </button>
-                      </a>
+                      </div>
                     </div>
                   </div>
                 );

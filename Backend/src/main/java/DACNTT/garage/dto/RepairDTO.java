@@ -16,6 +16,8 @@ public class RepairDTO {
     private String maPhieu;
     private String maLich;
     private String maNV;
+    private String maChiNhanh;
+    private String tenChiNhanh;
     private LocalDate ngayLap;
     private String ghiChu;
     private String trangThai;

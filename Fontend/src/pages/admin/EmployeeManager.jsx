@@ -196,10 +196,6 @@ export default function EmployeeManager() {
 
         {/* Bộ lọc */}
         <CollapsibleFilter title="Tìm kiếm & Lọc" icon={Search}>
-          <div className="flex items-center gap-3 mb-5">
-            <Search size={24} className="text-indigo-600" />
-            <h2 className="text-xl font-bold text-gray-800">Tìm kiếm & Lọc</h2>
-          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <input
               placeholder="Mã nhân viên"

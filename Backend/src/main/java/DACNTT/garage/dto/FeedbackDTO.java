@@ -16,6 +16,8 @@ public class FeedbackDTO {
     private LocalDateTime ngayGui;
     private String trangThai;
     private String phanHoiQL;
+    private String maChiNhanh;
+    private String tenChiNhanh;
 
     private String bienSo;
     private String hoTenKhach;

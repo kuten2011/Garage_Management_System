@@ -13,10 +13,12 @@ import {
   Upload,
   X,
   Image,
+  Building,
 } from "lucide-react";
 import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const API = "/admin/parts";
+const BRANCH_API = "/admin/branches";
 const PAGE_SIZE = 10;
 
 export default function PartManager() {
@@ -33,7 +35,9 @@ export default function PartManager() {
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState({ tenPT: "", donGia: "", soLuongTon: "" });
+  const [form, setForm] = useState({ tenPT: "", donGia: "", soLuongTon: "", moTa: "", maChiNhanh: "" });
+  const [branches, setBranches] = useState([]);
+  const [branchAllocations, setBranchAllocations] = useState([{ maChiNhanh: "", soLuongTon: "" }]);
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -52,11 +56,6 @@ export default function PartManager() {
         ...(stockUnder && { stockUnder }),
       };
 
-      if (search.trim()) params.append("search", search.trim());
-      if (priceFrom) params.append("priceFrom", priceFrom);
-      if (priceTo) params.append("priceTo", priceTo);
-      if (stockUnder) params.append("stockUnder", stockUnder);
-
       const res = await axiosInstance.get(API, { params });
       setData(res.data);
     } catch (err) {
@@ -70,6 +69,20 @@ export default function PartManager() {
   useEffect(() => {
     fetchData();
   }, [page, search, priceFrom, priceTo, stockUnder, sortBy, sortDir]);
+
+  const fetchBranches = async () => {
+    try {
+      const res = await axiosInstance.get(`${BRANCH_API}?page=0&size=100`);
+      setBranches(res.data.content || res.data || []);
+    } catch (err) {
+      console.error("Lỗi tải danh sách chi nhánh:", err);
+      setBranches([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchBranches();
+  }, []);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -120,7 +133,7 @@ export default function PartManager() {
   //   }
   // };
   const handleSave = async () => {
-    if (!form.tenPT || !form.donGia || form.soLuongTon === "") {
+    if (!form.tenPT || !form.donGia) {
       alert("Điền đầy đủ thông tin!");
       return;
     }
@@ -132,6 +145,8 @@ export default function PartManager() {
         formData.append("tenPT", form.tenPT);
         formData.append("donGia", form.donGia);
         formData.append("soLuongTon", form.soLuongTon);
+        formData.append("moTa", form.moTa || "");
+        formData.append("maChiNhanh", form.maChiNhanh);
 
         if (imageFile) {
           formData.append("image", imageFile);
@@ -141,23 +156,48 @@ export default function PartManager() {
           headers: { "Content-Type": "multipart/form-data" },
         });
       } else {
-        // CREATE với FormData (không gửi maPT - backend tự tạo)
+        const allocations = branchAllocations
+          .map((item) => ({
+            maChiNhanh: item.maChiNhanh?.trim(),
+            soLuongTon: item.soLuongTon === "" ? "" : Number(item.soLuongTon),
+          }))
+          .filter((item) => item.maChiNhanh && item.soLuongTon !== "" && !Number.isNaN(item.soLuongTon));
+
+        if (allocations.length === 0) {
+          alert("Vui lòng thêm ít nhất một chi nhánh và số lượng!");
+          return;
+        }
+
         const formData = new FormData();
-        formData.append("tenPT", form.tenPT);
-        formData.append("donGia", form.donGia);
-        formData.append("soLuongTon", form.soLuongTon);
+        formData.append(
+          "payload",
+          JSON.stringify({
+            tenPT: form.tenPT,
+            donGia: Number(form.donGia),
+            moTa: form.moTa || "",
+            allocations,
+          }),
+        );
 
         if (imageFile) {
           formData.append("image", imageFile);
         }
 
-        await axiosInstance.post(API, formData, {
+        await axiosInstance.post(`${API}/batch`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
+        setShowForm(false);
+        setEditing(null);
+        setForm({ tenPT: "", donGia: "", soLuongTon: "", moTa: "", maChiNhanh: "" });
+        setBranchAllocations([{ maChiNhanh: "", soLuongTon: "" }]);
+        setImageFile(null);
+        setImagePreview(null);
+        fetchData();
+        return;
       }
       setShowForm(false);
       setEditing(null);
-      setForm({ tenPT: "", donGia: "", soLuongTon: "" });
+      setForm({ tenPT: "", donGia: "", soLuongTon: "", moTa: "", maChiNhanh: "" });
       setImageFile(null);
       setImagePreview(null);
       fetchData();
@@ -176,16 +216,33 @@ export default function PartManager() {
     setEditing(item);
     setForm(
       item
-        ? {
-            tenPT: item.tenPT,
-            donGia: item.donGia,
-            soLuongTon: item.soLuongTon,
-          }
-        : { tenPT: "", donGia: "", soLuongTon: "" },
+            ? {
+                tenPT: item.tenPT,
+                donGia: item.donGia,
+                soLuongTon: item.soLuongTon,
+                moTa: item.moTa || "",
+                maChiNhanh: item.maChiNhanh || "",
+              }
+        : { tenPT: "", donGia: "", soLuongTon: "", moTa: "", maChiNhanh: "" },
     );
+    setBranchAllocations([{ maChiNhanh: "", soLuongTon: "" }]);
     setImageFile(null);
     setImagePreview(item?.hinhAnh || null);
     setShowForm(true);
+  };
+
+  const updateAllocation = (index, field, value) => {
+    setBranchAllocations((current) =>
+      current.map((item, idx) => (idx === index ? { ...item, [field]: value } : item)),
+    );
+  };
+
+  const addAllocationRow = () => {
+    setBranchAllocations((current) => [...current, { maChiNhanh: "", soLuongTon: "" }]);
+  };
+
+  const removeAllocationRow = (index) => {
+    setBranchAllocations((current) => current.filter((_, idx) => idx !== index));
   };
 
   const resetFilters = () => {
@@ -214,11 +271,6 @@ export default function PartManager() {
         </div>
 
         <CollapsibleFilter title="Bộ lọc & Sắp xếp" icon={Search}>
-          <h3 className="text-xl font-bold text-gray-800 mb-5 flex items-center gap-3">
-            <Search size={24} className="text-indigo-600" />
-            Bộ lọc & Sắp xếp
-          </h3>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="relative">
               <Search
@@ -313,6 +365,7 @@ export default function PartManager() {
                     <th className="px-8 py-5 text-left">Hình Ảnh</th>
                     <th className="px-8 py-5 text-left">Mã PT</th>
                     <th className="px-8 py-5 text-left">Tên Phụ Tùng</th>
+                    <th className="px-8 py-5 text-left">Chi Nhánh</th>
                     <th className="px-8 py-5 text-right">Đơn Giá</th>
                     <th className="px-8 py-5 text-center">Tồn Kho</th>
                     <th className="px-8 py-5 text-center">Thao Tác</th>
@@ -338,6 +391,12 @@ export default function PartManager() {
                         {p.maPT}
                       </td>
                       <td className="px-8 py-6 text-gray-800">{p.tenPT}</td>
+                      <td className="px-8 py-6 text-gray-700">
+                        <span className="inline-flex items-center gap-2">
+                          <Building size={18} className="text-indigo-600" />
+                          {p.tenChiNhanh || p.maChiNhanh || "-"}
+                        </span>
+                      </td>
                       <td className="px-8 py-6 text-right font-mono text-lg">
                         {p.donGia.toLocaleString("vi-VN")}đ
                       </td>
@@ -425,15 +484,91 @@ export default function PartManager() {
                   onChange={(e) => setForm({ ...form, donGia: e.target.value })}
                   className="w-full px-6 py-5 border-2 border-gray-300 rounded-xl text-xl focus:ring-4 focus:ring-purple-300"
                 />
-                <input
-                  type="number"
-                  placeholder="Số lượng tồn kho"
-                  value={form.soLuongTon}
-                  onChange={(e) =>
-                    setForm({ ...form, soLuongTon: e.target.value })
-                  }
-                  className="w-full px-6 py-5 border-2 border-gray-300 rounded-xl text-xl focus:ring-4 focus:ring-green-300"
+                {editing && (
+                  <input
+                    type="number"
+                    placeholder="Số lượng tồn kho"
+                    value={form.soLuongTon}
+                    onChange={(e) =>
+                      setForm({ ...form, soLuongTon: e.target.value })
+                    }
+                    className="w-full px-6 py-5 border-2 border-gray-300 rounded-xl text-xl focus:ring-4 focus:ring-green-300"
+                  />
+                )}
+                <textarea
+                  placeholder="Mô tả phụ tùng"
+                  value={form.moTa || ""}
+                  onChange={(e) => setForm({ ...form, moTa: e.target.value })}
+                  className="w-full px-6 py-5 border-2 border-gray-300 rounded-xl text-lg focus:ring-4 focus:ring-yellow-300 min-h-[140px]"
                 />
+                {editing ? (
+                  <select
+                    value={form.maChiNhanh}
+                    onChange={(e) =>
+                      setForm({ ...form, maChiNhanh: e.target.value })
+                    }
+                    className="w-full px-6 py-5 border-2 border-gray-300 rounded-xl text-xl focus:ring-4 focus:ring-indigo-300"
+                  >
+                    <option value="">-- Chọn chi nhánh --</option>
+                    {branches.map((branch) => (
+                      <option key={branch.maChiNhanh} value={branch.maChiNhanh}>
+                        {branch.maChiNhanh} - {branch.tenChiNhanh}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800">Phân bổ theo chi nhánh</h3>
+                        <p className="text-sm text-gray-500">Mỗi dòng là một chi nhánh và số lượng tồn kho riêng.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={addAllocationRow}
+                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                      >
+                        <Plus size={16} />
+                        Thêm dòng
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {branchAllocations.map((item, index) => (
+                        <div key={index} className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_180px_auto]">
+                          <select
+                            value={item.maChiNhanh}
+                            onChange={(e) => updateAllocation(index, "maChiNhanh", e.target.value)}
+                            className="w-full px-5 py-4 border-2 border-gray-300 rounded-xl text-base focus:ring-4 focus:ring-indigo-300"
+                          >
+                            <option value="">-- Chọn chi nhánh --</option>
+                            {branches.map((branch) => (
+                              <option key={branch.maChiNhanh} value={branch.maChiNhanh}>
+                                {branch.maChiNhanh} - {branch.tenChiNhanh}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="Số lượng"
+                            value={item.soLuongTon}
+                            onChange={(e) => updateAllocation(index, "soLuongTon", e.target.value)}
+                            className="w-full px-5 py-4 border-2 border-gray-300 rounded-xl text-base focus:ring-4 focus:ring-green-300"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeAllocationRow(index)}
+                            disabled={branchAllocations.length === 1}
+                            className="inline-flex items-center justify-center rounded-xl border border-red-200 px-4 py-4 text-red-600 hover:bg-red-50 disabled:opacity-40"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Upload ảnh */}
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6">

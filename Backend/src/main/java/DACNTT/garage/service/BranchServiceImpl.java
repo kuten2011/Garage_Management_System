@@ -3,7 +3,8 @@ package DACNTT.garage.service;
 import DACNTT.garage.model.Branch;
 import DACNTT.garage.repository.BranchRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,12 +54,24 @@ public class BranchServiceImpl implements BranchService {
     }
 
     @Override
-    public Branch save(Branch branch) {
-        // KIỂM TRA TRÙNG MÃ CHI NHÁNH TRƯỚC KHI THÊM MỚI
+    public Branch create(Branch branch) {
         if (branch.getMaChiNhanh() != null && branchRepository.existsById(branch.getMaChiNhanh())) {
             throw new RuntimeException("Mã chi nhánh '" + branch.getMaChiNhanh() + "' đã tồn tại!");
         }
         return branchRepository.save(branch);
+    }
+
+    @Override
+    public Branch update(String maChiNhanh, Branch branch) {
+        Branch existing = branchRepository.findById(maChiNhanh)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy chi nhánh: " + maChiNhanh));
+
+        existing.setTenChiNhanh(branch.getTenChiNhanh());
+        existing.setDiaChi(branch.getDiaChi());
+        existing.setSdt(branch.getSdt());
+        existing.setEmail(branch.getEmail());
+
+        return branchRepository.save(existing);
     }
 
     @Override

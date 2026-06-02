@@ -1,12 +1,13 @@
 package DACNTT.garage.controller.security;
 
-import DACNTT.garage.dto.CustomerDTO;
 import DACNTT.garage.dto.security.JwtResponse;
 import DACNTT.garage.dto.security.LoginRequest;
+import DACNTT.garage.dto.security.RefreshTokenRequest;
 import DACNTT.garage.dto.security.RegisterRequest;
 import DACNTT.garage.handle.CustomerHandle;
 import DACNTT.garage.security.JwtUtils;
 import DACNTT.garage.security.UserDetailsImpl;
+import DACNTT.garage.security.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,7 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/web_garage/auth")
+@RequestMapping("/auth")
 public class AuthController {
 
     @Autowired
@@ -25,13 +26,16 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
+    private final UserDetailsServiceImpl userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
     public AuthController(AuthenticationManager authenticationManager,
                           JwtUtils jwtUtils,
+                          UserDetailsServiceImpl userDetailsService,
                           PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
+        this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -52,9 +56,11 @@ public class AuthController {
             );
 
             UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            String refreshToken = jwtUtils.generateRefreshToken(userDetails);
 
             return ResponseEntity.ok(new JwtResponse(
                     jwt,
+                    refreshToken,
                     userDetails.getUsername(),
                     userDetails.getAuthorities()
             ));
@@ -70,6 +76,28 @@ public class AuthController {
     public ResponseEntity<?> register(
             @RequestBody RegisterRequest request) {
         return customerHandle.registerCustomer(request);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
+        String refreshToken = request.getRefreshToken();
+
+        if (refreshToken == null || refreshToken.isBlank() || !jwtUtils.validateRefreshToken(refreshToken)) {
+            return ResponseEntity.status(401).body("Refresh token không hợp lệ hoặc đã hết hạn");
+        }
+
+        String username = jwtUtils.getUserNameFromJwtToken(refreshToken);
+        UserDetailsImpl userDetails = (UserDetailsImpl) userDetailsService.loadUserByUsername(username);
+
+        String newAccessToken = jwtUtils.generateJwtToken(userDetails);
+        String newRefreshToken = jwtUtils.generateRefreshToken(userDetails);
+
+        return ResponseEntity.ok(new JwtResponse(
+                newAccessToken,
+                newRefreshToken,
+                userDetails.getUsername(),
+                userDetails.getAuthorities()
+        ));
     }
 
 }

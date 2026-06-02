@@ -229,7 +229,7 @@ export default function RepairDetail() {
     <div className="repair-detail-page min-h-screen bg-gray-50 py-8 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
         <Link
-          to={isStaff ? "/admin/repairs" : "/my-repairs"}
+          to={isStaff ? "/admin/repairs" : "/customer/my-repairs"}
           className="inline-flex items-center gap-3 text-indigo-600 hover:text-indigo-800 font-bold text-xl mb-8"
         >
           <ArrowLeft size={28} />

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, Clock, ShieldCheck, Sparkles, Star, Wrench } from "lucide-react";
 import axiosInstance from "../../api/axiosInstance";
 
-const API = `/admin/services`;
+const API = `/public/services`;
 
 export default function ServicesSection() {
   const [services, setServices] = useState([]);
@@ -44,7 +44,7 @@ export default function ServicesSection() {
           </div>
 
           <button
-            onClick={() => navigate("/services")}
+            onClick={() => navigate("/customer/services")}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-slate-800"
           >
             Xem tất cả
@@ -63,7 +63,7 @@ export default function ServicesSection() {
               <button
                 key={service.maDV}
                 type="button"
-                onClick={() => navigate("/services")}
+                onClick={() => navigate(`/customer/services/${service.maDV}`)}
                 className="home-service-card group overflow-hidden rounded-2xl bg-white text-left shadow-lg ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-2xl"
                 data-reveal
                 style={{ transitionDelay: `${index * 55}ms` }}

@@ -31,14 +31,14 @@ public class BranchHandle {
 
     public ResponseEntity<BranchDTO> createBranch(BranchDTO dto) {
         Branch branch = branchMapper.toEntity(dto);
-        Branch saved = branchService.save(branch);
+        Branch saved = branchService.create(branch);
         return ResponseEntity.status(HttpStatus.CREATED).body(branchMapper.toBranchDTO(saved));
     }
 
     public ResponseEntity<BranchDTO> updateBranch(String maChiNhanh, BranchDTO dto) {
         Branch branch = branchMapper.toEntity(dto);
         branch.setMaChiNhanh(maChiNhanh);
-        Branch updated = branchService.save(branch);
+        Branch updated = branchService.update(maChiNhanh, branch);
         return ResponseEntity.ok(branchMapper.toBranchDTO(updated));
     }
 

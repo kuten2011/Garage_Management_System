@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { User, Phone, Mail, Lock, MapPin, AlertCircle } from "lucide-react";
 import axiosInstance from "../../api/axiosInstance";
+import VietnamAddressSelects from "../../components/form/VietnamAddressSelects";
+import { buildVietnamAddress } from "../../utils/vietnamAddress";
 
-const API_REGISTER = "/web_garage/auth/register";
+const API_REGISTER = "/auth/register";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -11,7 +13,10 @@ export default function RegisterPage() {
     hoTen: "",
     sdt: "",
     email: "",
-    diaChi: "",
+    street: "",
+    province: "",
+    district: "",
+    ward: "",
     matKhau: "",
     confirmMatKhau: "",
   });
@@ -27,6 +32,16 @@ export default function RegisterPage() {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
+  };
+
+  const handleAddressChange = (next) => {
+    setFormData((prev) => ({ ...prev, ...next }));
+    setErrors((prev) => ({
+      ...prev,
+      province: "",
+      district: "",
+      ward: "",
+    }));
   };
 
   const validateForm = () => {
@@ -46,6 +61,10 @@ export default function RegisterPage() {
     else if (formData.matKhau.length < 6)
       newErrors.matKhau = "Mật khẩu phải ít nhất 6 ký tự";
 
+    if (!formData.province) newErrors.province = "Vui lòng chọn tỉnh / thành";
+    if (!formData.district) newErrors.district = "Vui lòng chọn quận / huyện";
+    if (!formData.ward) newErrors.ward = "Vui lòng chọn xã / phường";
+
     if (formData.matKhau !== formData.confirmMatKhau)
       newErrors.confirmMatKhau = "Mật khẩu xác nhận không khớp";
 
@@ -60,11 +79,11 @@ export default function RegisterPage() {
     setServerMessage(null);
 
     try {
-      const response = await axiosInstance.post("/web_garage/auth/register", {
+      const response = await axiosInstance.post("/auth/register", {
         hoTen: formData.hoTen.trim(),
         sdt: formData.sdt,
         email: formData.email.toLowerCase(),
-        diaChi: formData.diaChi.trim(),
+        diaChi: buildVietnamAddress(formData),
         matKhau: formData.matKhau,
       });
 
@@ -165,20 +184,22 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Địa chỉ (tùy chọn) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <MapPin className="inline w-4 h-4 mr-1" />
-                Địa chỉ (tùy chọn)
-              </label>
-              <input
-                type="text"
-                name="diaChi"
-                value={formData.diaChi}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-transparent"
-                placeholder="123 Đường ABC, Quận 1, TP.HCM"
+              <VietnamAddressSelects
+                label={
+                  <>
+                    <MapPin className="inline w-4 h-4 mr-1" />
+                    Địa chỉ Việt Nam
+                  </>
+                }
+                value={formData}
+                onChange={handleAddressChange}
               />
+              {errors.province || errors.district || errors.ward ? (
+                <p className="mt-2 text-xs text-red-500">
+                  {errors.province || errors.district || errors.ward}
+                </p>
+              ) : null}
             </div>
 
             {/* Mật khẩu */}

@@ -2,8 +2,10 @@ package DACNTT.garage.handle;
 
 import DACNTT.garage.dto.FeedbackDTO;
 import DACNTT.garage.mapper.FeedbackMapper;
+import DACNTT.garage.model.Branch;
 import DACNTT.garage.model.Feedback;
 import DACNTT.garage.model.Repair;
+import DACNTT.garage.repository.BranchRepository;
 import DACNTT.garage.repository.CustomerRepository;
 import DACNTT.garage.repository.FeedbackRepository;
 import DACNTT.garage.repository.RepairRepository;
@@ -26,6 +28,7 @@ public class FeedbackHandle {
     @Autowired private RepairRepository repairRepository;
     @Autowired private FeedbackRepository feedbackRepository;
     @Autowired private CustomerRepository customerRepository;
+    @Autowired private BranchRepository branchRepository;
 
     public ResponseEntity<Page<FeedbackDTO>> getAllFeedbacks(int page, int size, String search, String trangThai) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "ngayGui"));
@@ -47,6 +50,9 @@ public class FeedbackHandle {
         if (dto.getTrangThai() != null) {
             existing.setTrangThai(dto.getTrangThai());
         }
+        if (dto.getMaChiNhanh() != null && !dto.getMaChiNhanh().isBlank()) {
+            existing.setChiNhanh(resolveBranch(dto.getMaChiNhanh()));
+        }
 
         Feedback updated = feedbackService.updateFeedback(existing);
         return ResponseEntity.ok(feedbackMapper.toFeedbackDTO(updated));
@@ -54,7 +60,7 @@ public class FeedbackHandle {
 
     public ResponseEntity<FeedbackDTO> createFeedbackFromCustomer(String maPSC, FeedbackDTO dto, Principal principal) {
         Repair repair = repairRepository.findById(maPSC)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu sửa chữa"));
+                .orElseThrow(() -> new RuntimeException("Khong tim thay phieu sua chua"));
 
         String maKHFromToken = customerRepository.findByEmail(principal.getName()).get().getMaKH();
         if (!repair.getLichHen().getKhachHang().getMaKH().equals(maKHFromToken)) {
@@ -65,9 +71,18 @@ public class FeedbackHandle {
             return ResponseEntity.badRequest().body(null);
         }
 
+        Branch branch = repair.getChiNhanh();
+        if (dto.getMaChiNhanh() != null && !dto.getMaChiNhanh().isBlank()) {
+            branch = resolveBranch(dto.getMaChiNhanh());
+            if (repair.getChiNhanh() != null && !repair.getChiNhanh().getMaChiNhanh().equals(branch.getMaChiNhanh())) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+            }
+        }
+
         Feedback feedback = Feedback.builder()
                 .maPhanHoi(generateId())
                 .phieuSuaChua(repair)
+                .chiNhanh(branch)
                 .ngayGui(LocalDateTime.now())
                 .noiDung(dto.getNoiDung())
                 .soSao(dto.getSoSao())
@@ -79,8 +94,14 @@ public class FeedbackHandle {
     }
 
     private String generateId() {
-         List<Feedback> all = feedbackRepository.findAll();
-         int nextNumber = all.size() + 1;
+        List<Feedback> all = feedbackRepository.findAll();
+        int nextNumber = all.size() + 1;
         return String.format("PH%02d", nextNumber);
+    }
+
+    private Branch resolveBranch(String maChiNhanh) {
+        String normalized = maChiNhanh.trim().toUpperCase();
+        return branchRepository.findById(normalized)
+                .orElseThrow(() -> new RuntimeException("Khong tim thay chi nhanh: " + normalized));
     }
 }

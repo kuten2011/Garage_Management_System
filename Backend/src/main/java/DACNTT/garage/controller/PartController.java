@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/admin/parts")
 public class PartController {
@@ -26,11 +28,13 @@ public class PartController {
             @RequestParam(required = false) Integer stockTo,
             @RequestParam(required = false) Integer stockUnder,
             @RequestParam(required = false) Integer stockAbove,
+            @RequestParam(required = false) String maChiNhanh,
             @RequestParam(defaultValue = "maPT") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
 
         return partHandle.searchParts(page, size, search,
                 priceFrom, priceTo, stockFrom, stockTo, stockUnder, stockAbove,
+                maChiNhanh,
                 sortBy, sortDir);
     }
 
@@ -57,6 +61,13 @@ public class PartController {
             @RequestPart(value = "image", required = false) MultipartFile image) {
 
         return partHandle.createPart(partDTO, image);
+    }
+
+    @PostMapping(value = "/batch", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<List<PartDTO>> createPartsBatch(
+            @RequestPart("payload") String payloadJson,
+            @RequestPart(value = "image", required = false) MultipartFile image) {
+        return partHandle.createPartsBatch(payloadJson, image);
     }
 
 //    @PutMapping("/{maPT}")

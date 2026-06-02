@@ -4,8 +4,11 @@ import DACNTT.garage.model.ServiceEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-public interface ServiceEntityRepository extends JpaRepository<ServiceEntity, String> {
+import java.util.Optional;
+
+public interface ServiceEntityRepository extends JpaRepository<ServiceEntity, String>, JpaSpecificationExecutor<ServiceEntity> {
 
     Page<ServiceEntity> findAll(Pageable pageable);
     Page<ServiceEntity> findByTenDVContainingIgnoreCaseOrMaDVContainingIgnoreCase(
@@ -15,4 +18,5 @@ public interface ServiceEntityRepository extends JpaRepository<ServiceEntity, St
     Page<ServiceEntity> findByGiaTienGreaterThanEqual(Double giaTien, Pageable pageable);
     Page<ServiceEntity> findByGiaTienLessThanEqual(Double giaTien, Pageable pageable);
     Page<ServiceEntity> findByGiaTienBetween(Double from, Double to, Pageable pageable);
+    Optional<ServiceEntity> findTopByOrderByMaDVDesc();
 }

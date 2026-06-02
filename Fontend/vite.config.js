@@ -5,7 +5,13 @@ export default defineConfig({
   plugins: [react()],
 
   server: {
-    allowedHosts: ["performing-sizes-given-timing.trycloudflare.com"]
+    allowedHosts: ["performing-sizes-given-timing.trycloudflare.com"],
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
+    },
   },
 
   build: {

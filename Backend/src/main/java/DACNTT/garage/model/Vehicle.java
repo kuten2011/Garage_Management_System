@@ -20,6 +20,10 @@ public class Vehicle {
     @JoinColumn(name = "maKH", nullable = false)
     private Customer khachHang;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "maChiNhanh")
+    private Branch chiNhanh;
+
     @Column(name = "hangXe", length = 50)
     private String hangXe;
 

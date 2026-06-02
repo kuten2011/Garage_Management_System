@@ -11,6 +11,8 @@ public class VehicleDTO {
     private String bienSo;
     private String maKH;
     private String tenKH;
+    private String maChiNhanh;
+    private String tenChiNhanh;
 
     private String hangXe;
     private String mauXe;

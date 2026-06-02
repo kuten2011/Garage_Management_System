@@ -84,16 +84,17 @@ public class SecurityConfig {
                         // Public routes
                         .requestMatchers("/", "/index.html", "/static/**", "/assets/**",
                                 "/css/**", "/js/**", "/img/**", "/favicon.ico", "/health").permitAll()
-                        .requestMatchers("/web_garage/auth/**", "/chatbot/**", "/customer/**").permitAll()
+                        .requestMatchers("/auth/**", "/chatbot/**").permitAll()
 
-                        // Cho phép GET public (phải đặt TRƯỚC rule /admin/**)
-                        .requestMatchers(HttpMethod.GET, "/admin/parts/**", "/admin/services/**").permitAll()
+                        // Public catalog
+                        .requestMatchers(HttpMethod.GET, "/public/**").permitAll()
 
                         // Role cụ thể (đặt TRƯỚC rule chung /admin/**)
                         .requestMatchers("/admin/employees/**", "/admin/customers/**",
                                 "/admin/branches/**", "/admin/reports/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers("/admin/bookings/**", "/admin/repairs/**",
-                                "/admin/feedbacks/**").hasAnyRole("ADMIN", "EMPLOYEE")
+                                "/admin/feedbacks/**", "/admin/part-orders/**").hasAnyRole("ADMIN", "EMPLOYEE")
+                        .requestMatchers("/customer/**").hasRole("CUSTOMER")
 
                         // Rule chung nhất đặt CUỐI
                         .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")

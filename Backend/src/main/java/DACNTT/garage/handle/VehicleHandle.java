@@ -2,8 +2,10 @@ package DACNTT.garage.handle;
 
 import DACNTT.garage.dto.VehicleDTO;
 import DACNTT.garage.mapper.VehicleMapper;
+import DACNTT.garage.model.Branch;
 import DACNTT.garage.model.Customer;
 import DACNTT.garage.model.Vehicle;
+import DACNTT.garage.repository.BranchRepository;
 import DACNTT.garage.repository.CustomerRepository;
 import DACNTT.garage.service.VehicleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,7 @@ public class VehicleHandle {
     @Autowired private VehicleMapper vehicleMapper;
 
     @Autowired private CustomerRepository customerRepository;
+    @Autowired private BranchRepository branchRepository;
 
     public ResponseEntity<Page<VehicleDTO>> getAllVehicles(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("bienSo").ascending());
@@ -112,6 +115,7 @@ public class VehicleHandle {
     }
 
     public ResponseEntity<VehicleDTO> createVehicle(VehicleDTO dto) {
+        dto.setMaChiNhanh(resolveRequiredBranch(dto.getMaChiNhanh()).getMaChiNhanh());
         Vehicle vehicle = vehicleMapper.toVehicle(dto);
         Vehicle saved = vehicleService.createVehicle(vehicle);
         return ResponseEntity.status(HttpStatus.CREATED).body(vehicleMapper.toVehicleDTO(saved));
@@ -126,6 +130,7 @@ public class VehicleHandle {
         }
 
         // Map từ DTO sang entity (cập nhật các field)
+        dto.setMaChiNhanh(resolveRequiredBranch(dto.getMaChiNhanh()).getMaChiNhanh());
         Vehicle vehicleToUpdate = vehicleMapper.toVehicle(dto);
         vehicleToUpdate.setBienSo(bienSo); // Giữ nguyên biển số (primary key)
 
@@ -158,6 +163,16 @@ public class VehicleHandle {
                         throw new IllegalArgumentException("Mã khách hàng không được để trống khi cập nhật");
                     }
                 }
+                case "maChiNhanh" -> {
+                    if (value != null && !value.toString().trim().isEmpty()) {
+                        String maChiNhanh = value.toString().trim().toUpperCase();
+                        Branch branch = branchRepository.findById(maChiNhanh)
+                                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi nhánh: " + maChiNhanh));
+                        existing.setChiNhanh(branch);
+                    } else {
+                        throw new IllegalArgumentException("Xe phải thuộc một chi nhánh");
+                    }
+                }
                 case "hangXe" -> existing.setHangXe(value instanceof String ? (String) value : null);
                 case "mauXe" -> existing.setMauXe(value instanceof String ? (String) value : null);
                 case "soKm" -> existing.setSoKm(value instanceof Integer ? (Integer) value : null);
@@ -171,7 +186,7 @@ public class VehicleHandle {
                 case "chuKyBaoDuongKm" ->
                         existing.setChuKyBaoDuongKm(value instanceof Integer ? (Integer) value : null);
                 case "chuKyBaoDuongThang" ->
-                        existing.setChuKyBaoDuongKm(value instanceof Integer ? (Integer) value : null);
+                        existing.setChuKyBaoDuongThang(value instanceof Integer ? (Integer) value : null);
                 default -> { /* Bỏ qua field không hợp lệ */ }
             }
         });
@@ -185,5 +200,14 @@ public class VehicleHandle {
 
         Vehicle updated = vehicleService.updateVehicle(bienSo, existing);
         return ResponseEntity.ok(vehicleMapper.toVehicleDTO(updated));
+    }
+
+    private Branch resolveRequiredBranch(String maChiNhanh) {
+        if (maChiNhanh == null || maChiNhanh.isBlank()) {
+            throw new IllegalArgumentException("Xe phải thuộc một chi nhánh");
+        }
+        String normalized = maChiNhanh.trim().toUpperCase();
+        return branchRepository.findById(normalized)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chi nhánh: " + normalized));
     }
 }

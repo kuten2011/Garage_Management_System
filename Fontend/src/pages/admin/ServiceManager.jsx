@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axiosInstance from "../../api/axiosInstance"; 
-import { Plus, Search, DollarSign, Edit3, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, DollarSign, Edit3, Trash2, ChevronLeft, ChevronRight, Building } from "lucide-react";
 import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const API = "/admin/services";
+const BRANCH_API = "/admin/branches";
 const PAGE_SIZE = 10;
 
 export default function ServiceManager() {
@@ -20,8 +21,10 @@ export default function ServiceManager() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({
-    maDV: "", tenDV: "", giaTien: "", moTa: ""
+    maDV: "", tenDV: "", giaTien: "", moTa: "", maChiNhanh: ""
   });
+  const [branches, setBranches] = useState([]);
+  const [branchSelections, setBranchSelections] = useState([""]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -45,9 +48,23 @@ export default function ServiceManager() {
     fetchData();
   }, [page, search, priceFrom, priceTo]);
 
+  const fetchBranches = async () => {
+    try {
+      const res = await axiosInstance.get(`${BRANCH_API}?page=0&size=100`);
+      setBranches(res.data.content || res.data || []);
+    } catch (err) {
+      console.error("Lỗi tải danh sách chi nhánh:", err);
+      setBranches([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchBranches();
+  }, []);
+
   const handleSave = async () => {
-    if (!form.maDV?.trim() || !form.tenDV?.trim() || !form.giaTien) {
-      alert("Vui lòng điền đầy đủ: Mã DV, Tên DV, Giá tiền!");
+    if (!form.tenDV?.trim() || !form.giaTien) {
+      alert("Vui lòng điền đầy đủ: Tên DV và Giá tiền!");
       return;
     }
     try {
@@ -55,12 +72,37 @@ export default function ServiceManager() {
         await axiosInstance.put(`${API}/${form.maDV}`, form);
         alert("Cập nhật dịch vụ thành công!");
       } else {
-        await axiosInstance.post(API, form);
+        const selectedBranches = branchSelections
+          .map((item) => item.trim())
+          .filter(Boolean);
+
+        if (selectedBranches.length === 0) {
+          alert("Vui lòng chọn ít nhất một chi nhánh!");
+          return;
+        }
+
+        if (selectedBranches.length === 1 && form.maDV?.trim()) {
+          await axiosInstance.post(API, {
+            maDV: form.maDV.trim(),
+            tenDV: form.tenDV.trim(),
+            giaTien: Number(form.giaTien),
+            moTa: form.moTa || "",
+            maChiNhanh: selectedBranches[0],
+          });
+        } else {
+          await axiosInstance.post(`${API}/batch`, {
+            tenDV: form.tenDV.trim(),
+            giaTien: Number(form.giaTien),
+            moTa: form.moTa || "",
+            maChiNhanhList: selectedBranches,
+          });
+        }
         alert("Thêm dịch vụ thành công!");
       }
       setShowForm(false);
       setEditing(null);
-      setForm({ maDV: "", tenDV: "", giaTien: "", moTa: "" });
+      setForm({ maDV: "", tenDV: "", giaTien: "", moTa: "", maChiNhanh: "" });
+      setBranchSelections([""]);
       fetchData();
     } catch (err) {
       alert(err.response?.data?.message || "Lỗi lưu dịch vụ!");
@@ -79,8 +121,23 @@ export default function ServiceManager() {
 
   const openForm = (item = null) => {
     setEditing(item);
-    setForm(item ? { ...item } : { maDV: "", tenDV: "", giaTien: "", moTa: "" });
+    setForm(item ? { ...item, maChiNhanh: item.maChiNhanh || "" } : { maDV: "", tenDV: "", giaTien: "", moTa: "", maChiNhanh: "" });
+    setBranchSelections(item?.maChiNhanh ? [item.maChiNhanh] : ["" ]);
     setShowForm(true);
+  };
+
+  const updateBranchSelection = (index, value) => {
+    setBranchSelections((current) =>
+      current.map((item, idx) => (idx === index ? value : item)),
+    );
+  };
+
+  const addBranchSelection = () => {
+    setBranchSelections((current) => [...current, ""]);
+  };
+
+  const removeBranchSelection = (index) => {
+    setBranchSelections((current) => current.filter((_, idx) => idx !== index));
   };
 
   const resetFilters = () => {
@@ -109,11 +166,6 @@ export default function ServiceManager() {
 
         {/* Bộ lọc */}
         <CollapsibleFilter title="Bộ lọc tìm kiếm" icon={Search}>
-          <h3 className="text-xl font-bold mb-5 text-gray-800 flex items-center gap-3">
-            <Search size={24} className="text-indigo-600" />
-            Bộ lọc tìm kiếm
-          </h3>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Tìm kiếm */}
             <div className="relative">
@@ -175,6 +227,7 @@ export default function ServiceManager() {
                   <tr>
                     <th className="px-10 py-6 text-left text-xl font-bold">Mã DV</th>
                     <th className="px-10 py-6 text-left text-xl font-bold">Tên dịch vụ</th>
+                    <th className="px-10 py-6 text-left text-xl font-bold">Chi nhánh</th>
                     <th className="px-10 py-6 text-right text-xl font-bold">Giá tiền</th>
                     <th className="px-10 py-6 text-left text-xl font-bold">Mô tả</th>
                     <th className="px-10 py-6 text-center text-xl font-bold">Thao tác</th>
@@ -185,6 +238,12 @@ export default function ServiceManager() {
                     <tr key={s.maDV} className="hover:bg-indigo-50 transition">
                       <td className="px-10 py-8 font-bold text-indigo-700 text-xl">{s.maDV}</td>
                       <td className="px-10 py-8 font-semibold text-lg">{s.tenDV}</td>
+                      <td className="px-10 py-8 text-gray-700">
+                        <span className="inline-flex items-center gap-2">
+                          <Building size={18} className="text-indigo-600" />
+                          {s.tenChiNhanh || s.maChiNhanh || "-"}
+                        </span>
+                      </td>
                       <td className="px-10 py-8 text-right font-mono text-xl text-green-600">
                         {Number(s.giaTien).toLocaleString()}đ
                       </td>
@@ -247,6 +306,64 @@ export default function ServiceManager() {
                   onChange={e => setForm({ ...form, giaTien: e.target.value })}
                   className="px-8 py-6 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-green-300"
                 />
+                {editing ? (
+                  <select
+                    value={form.maChiNhanh}
+                    onChange={e => setForm({ ...form, maChiNhanh: e.target.value })}
+                    className="px-8 py-6 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-indigo-300"
+                  >
+                    <option value="">-- Chọn chi nhánh --</option>
+                    {branches.map((branch) => (
+                      <option key={branch.maChiNhanh} value={branch.maChiNhanh}>
+                        {branch.maChiNhanh} - {branch.tenChiNhanh}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="md:col-span-2 space-y-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800">Phân bổ chi nhánh</h3>
+                        <p className="text-sm text-gray-500">Một dịch vụ có thể gán cho nhiều chi nhánh trong một lần lưu.</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={addBranchSelection}
+                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+                      >
+                        <Plus size={16} />
+                        Thêm dòng
+                      </button>
+                    </div>
+
+                    <div className="space-y-3">
+                      {branchSelections.map((value, index) => (
+                        <div key={index} className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto]">
+                          <select
+                            value={value}
+                            onChange={(e) => updateBranchSelection(index, e.target.value)}
+                            className="px-6 py-4 border-2 border-gray-300 rounded-2xl text-lg focus:ring-4 focus:ring-indigo-300"
+                          >
+                            <option value="">-- Chọn chi nhánh --</option>
+                            {branches.map((branch) => (
+                              <option key={branch.maChiNhanh} value={branch.maChiNhanh}>
+                                {branch.maChiNhanh} - {branch.tenChiNhanh}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => removeBranchSelection(index)}
+                            disabled={branchSelections.length === 1}
+                            className="inline-flex items-center justify-center rounded-2xl border border-red-200 px-4 py-4 text-red-600 hover:bg-red-50 disabled:opacity-40"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <textarea
                   placeholder="Mô tả dịch vụ (tùy chọn)"
                   value={form.moTa}
@@ -254,6 +371,11 @@ export default function ServiceManager() {
                   rows="4"
                   className="px-8 py-6 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-indigo-300 resize-none"
                 />
+                {!editing && (
+                  <p className="md:col-span-2 text-sm text-gray-500">
+                    Khi chọn nhiều chi nhánh, mã dịch vụ sẽ được hệ thống tự sinh.
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-center gap-10 mt-16">

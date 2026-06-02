@@ -12,11 +12,13 @@ import {
   Gauge,
   Calendar,
   Shield,
+  Building,
 } from "lucide-react";
 import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
 const API = "/admin/vehicles";
 const CUSTOMER_API = "/admin/customers";
+const BRANCH_API = "/admin/branches";
 const PAGE_SIZE = 10;
 
 // Danh sách hãng xe phổ biến
@@ -49,6 +51,7 @@ export default function VehicleManager() {
 
   // Dữ liệu cho dropdown
   const [customers, setCustomers] = useState([]); // Danh sách khách hàng
+  const [branches, setBranches] = useState([]);
   const [selectedBrand, setSelectedBrand] = useState(""); // Hãng xe chọn
   const [customBrand, setCustomBrand] = useState(""); // Hãng xe nhập tay
 
@@ -63,6 +66,7 @@ export default function VehicleManager() {
     ngayBaoDuongTiepTheo: "",
     chuKyBaoDuongKm: 10000,
     chuKyBaoDuongThang: 12,
+    maChiNhanh: "",
   });
 
   // Lấy danh sách khách hàng khi mở form
@@ -76,6 +80,16 @@ export default function VehicleManager() {
     }
   };
 
+  const fetchBranches = async () => {
+    try {
+      const res = await axiosInstance.get(`${BRANCH_API}?page=0&size=100`);
+      setBranches(res.data.content || res.data || []);
+    } catch (err) {
+      console.error("Lỗi tải danh sách chi nhánh:", err);
+      setBranches([]);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, [page, search, filter]);
@@ -83,6 +97,7 @@ export default function VehicleManager() {
   useEffect(() => {
     if (showForm) {
       fetchCustomers();
+      fetchBranches();
     }
   }, [showForm]);
 
@@ -131,6 +146,7 @@ export default function VehicleManager() {
       ngayBaoDuongTiepTheo: v.ngayBaoDuongTiepTheo || "",
       chuKyBaoDuongKm: v.chuKyBaoDuongKm || 10000,
       chuKyBaoDuongThang: v.chuKyBaoDuongThang || 12,
+      maChiNhanh: v.maChiNhanh || "",
     });
     setShowForm(true);
   };
@@ -143,6 +159,10 @@ export default function VehicleManager() {
       }
       if (!formData.bienSo || formData.bienSo.trim() === "") {
         alert("Vui lòng nhập biển số xe!");
+        return;
+      }
+      if (!formData.maChiNhanh || formData.maChiNhanh.trim() === "") {
+        alert("Vui lòng chọn chi nhánh cho xe!");
         return;
       }
       // Xử lý hãng xe
@@ -169,6 +189,7 @@ export default function VehicleManager() {
           ngayBaoDuongTiepTheo: dataToSend.ngayBaoDuongTiepTheo || null,
           chuKyBaoDuongKm: dataToSend.chuKyBaoDuongKm,
           chuKyBaoDuongThang: dataToSend.chuKyBaoDuongThang,
+          maChiNhanh: dataToSend.maChiNhanh,
         };
         await axiosInstance.patch(`${API}/${formData.bienSo}`, patchData);
       } else {
@@ -211,6 +232,7 @@ export default function VehicleManager() {
                 ngayBaoDuongTiepTheo: "",
                 chuKyBaoDuongKm: 10000,
                 chuKyBaoDuongThang: 12,
+                maChiNhanh: "",
               });
               setShowForm(true);
             }}
@@ -343,6 +365,12 @@ export default function VehicleManager() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
+                      <Building size={22} className="text-indigo-600" />
+                      <span className="text-base font-medium">
+                        {v.tenChiNhanh || v.maChiNhanh || "Chưa gán chi nhánh"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
                       <Gauge size={22} className="text-gray-600" />
                       <span className="text-base font-medium">
                         {v.soKm?.toLocaleString() || 0} km • Năm {v.namSX}
@@ -469,6 +497,27 @@ export default function VehicleManager() {
                     {customers.map((kh) => (
                       <option key={kh.maKH} value={kh.maKH}>
                         {kh.maKH} - {kh.hoTen} ({kh.sdt})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Chi nhánh <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.maChiNhanh}
+                    onChange={(e) =>
+                      setFormData({ ...formData, maChiNhanh: e.target.value })
+                    }
+                    className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-indigo-500 outline-none"
+                    required
+                  >
+                    <option value="">-- Chọn chi nhánh --</option>
+                    {branches.map((branch) => (
+                      <option key={branch.maChiNhanh} value={branch.maChiNhanh}>
+                        {branch.maChiNhanh} - {branch.tenChiNhanh}
                       </option>
                     ))}
                   </select>

@@ -17,4 +17,8 @@ public class ServiceEntity {
     private String tenDV;
     private Double giaTien;
     private String moTa;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "maChiNhanh")
+    private Branch chiNhanh;
 }

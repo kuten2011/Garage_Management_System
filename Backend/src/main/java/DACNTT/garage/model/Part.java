@@ -24,6 +24,13 @@ public class Part {
     @Builder.Default
     private Integer soLuongTon = 0;
 
+    @Column(columnDefinition = "TEXT")
+    private String moTa;
+
     @Column
     private String hinhAnh;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "maChiNhanh")
+    private Branch chiNhanh;
 }

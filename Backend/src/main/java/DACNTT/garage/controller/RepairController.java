@@ -60,7 +60,6 @@ public class RepairController {
     // THANH TOÁN TIỀN MẶT
     @PostMapping("/admin/repairs/{maPhieu}/pay-cash")
     public ResponseEntity<?> payWithCash(@PathVariable String maPhieu) {
-        repairHandle.updateSumMoney(maPhieu);
         return repairHandle.updatePaymentStatus(maPhieu, "Đã thanh toán", "Thanh toán tiền mặt");
     }
 

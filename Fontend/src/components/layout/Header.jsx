@@ -15,8 +15,12 @@ import {
   User,
   Edit3,
   Lock,
+  ShoppingCart,
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { notify } from "../../utils/notify";
+import VietnamAddressSelects from "../form/VietnamAddressSelects";
+import { buildVietnamAddress, parseVietnamAddress } from "../../utils/vietnamAddress";
 
 export default function Header({ isScrolled }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,7 +31,10 @@ export default function Header({ isScrolled }) {
     hoTen: "",
     sdt: "",
     email: "",
-    diaChi: "",
+    street: "",
+    province: "",
+    district: "",
+    ward: "",
     matKhauCu: "",
     matKhauMoi: "",
     xacNhanMatKhau: "",
@@ -37,10 +44,11 @@ export default function Header({ isScrolled }) {
   const location = useLocation();
 
   const token = localStorage.getItem("token");
+  const refreshToken = localStorage.getItem("refreshToken");
   const rawUserData = localStorage.getItem("user");
   const userData = rawUserData ? JSON.parse(rawUserData) : {};
   const maTaiKhoan = userData.maKH || userData.maNV || userData.username || "";
-  const isLoggedIn = !!token && !!maTaiKhoan;
+  const isLoggedIn = (!!token || !!refreshToken) && !!maTaiKhoan;
 
   let isStaff = false;
   if (isLoggedIn && userData.authorities) {
@@ -61,8 +69,8 @@ export default function Header({ isScrolled }) {
         setLoading(true);
         try {
           const apiUrl = isStaff
-            ? `/admin/employees/api/${maTaiKhoan}`
-            : `/api/customers/api/${maTaiKhoan}`;
+            ? `/admin/employees/by-email/${maTaiKhoan}`
+            : `/customer/by-email/${maTaiKhoan}`;
 
           const response = await axiosInstance.get(apiUrl);
           const data = response.data;
@@ -72,14 +80,14 @@ export default function Header({ isScrolled }) {
             hoTen: data.hoTen || "",
             sdt: data.sdt || "",
             email: data.email || "",
-            diaChi: data.diaChi || "",
+            ...parseVietnamAddress(data.diaChi || ""),
             matKhauCu: "",
             matKhauMoi: "",
             xacNhanMatKhau: "",
           }));
         } catch (err) {
           console.error("Lỗi lấy thông tin:", err);
-          alert("Không thể tải thông tin tài khoản. Vui lòng thử lại.");
+          notify("Không thể tải thông tin tài khoản. Vui lòng thử lại.", "error");
         } finally {
           setLoading(false);
         }
@@ -90,17 +98,18 @@ export default function Header({ isScrolled }) {
   }, [showAccountPopup, isLoggedIn, maTaiKhoan, isStaff]);
 
   const menuItems = [
-    { label: "Trang chủ", route: "/", icon: <Home size={18} /> },
-    { label: "Dịch vụ", route: "/services", icon: <Car size={18} /> },
-    { label: "Sản phẩm", route: "/parts", icon: <Package size={18} /> },
-    { label: "Giới thiệu", route: "/#about", icon: <Info size={18} /> },
-    { label: "Liên hệ", route: "/#contact", icon: <PhoneCall size={18} /> },
+    { label: "Trang chủ", route: "/customer", icon: <Home size={18} /> },
+    { label: "Dịch vụ", route: "/customer/services", icon: <Car size={18} /> },
+    { label: "Sản phẩm", route: "/customer/parts", icon: <Package size={18} /> },
+    { label: "Giỏ hàng", route: "/customer/cart", icon: <ShoppingCart size={18} /> },
+    { label: "Thông tin", route: "/thong-tin", icon: <Info size={18} /> },
+    { label: "Liên hệ", route: "/lien-he", icon: <PhoneCall size={18} /> },
   ];
 
   let finalMenuItems = isLoggedIn
     ? [
         ...menuItems,
-        { label: "Phiếu Sửa Chữa", route: "/my-repairs", icon: <ClipboardList size={18} /> },
+        { label: "Phiếu Sửa Chữa", route: "/customer/my-repairs", icon: <ClipboardList size={18} /> },
       ]
     : menuItems;
 
@@ -124,8 +133,9 @@ export default function Header({ isScrolled }) {
   const handleAuth = () => {
     if (isLoggedIn) {
       localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
-      navigate("/");
+      navigate("/customer");
       window.location.reload();
     } else {
       navigate("/login");
@@ -139,27 +149,33 @@ export default function Header({ isScrolled }) {
     try {
       if (formData.matKhauMoi || formData.xacNhanMatKhau) {
         if (!formData.matKhauCu) {
-          alert("Vui lòng nhập mật khẩu cũ để đổi mật khẩu!");
+          notify("Vui lòng nhập mật khẩu cũ để đổi mật khẩu!", "error");
           setProcessing(false);
           return;
         }
         if (formData.matKhauMoi !== formData.xacNhanMatKhau) {
-          alert("Mật khẩu mới và xác nhận không khớp!");
+          notify("Mật khẩu mới và xác nhận không khớp!", "error");
           setProcessing(false);
           return;
         }
         if (formData.matKhauMoi.length < 6) {
-          alert("Mật khẩu mới phải có ít nhất 6 ký tự!");
+          notify("Mật khẩu mới phải có ít nhất 6 ký tự!", "error");
           setProcessing(false);
           return;
         }
+      }
+
+      if (!formData.province || !formData.district || !formData.ward) {
+        notify("Vui lòng chọn đầy đủ tỉnh, huyện và xã của Việt Nam!", "error");
+        setProcessing(false);
+        return;
       }
 
       const payload = {
         hoTen: formData.hoTen.trim() || null,
         sdt: formData.sdt.trim() || null,
         email: formData.email.trim() || null,
-        diaChi: formData.diaChi.trim() || null,
+        diaChi: buildVietnamAddress(formData) || null,
       };
 
       if (formData.matKhauMoi) {
@@ -168,8 +184,8 @@ export default function Header({ isScrolled }) {
       }
 
       const apiUrl = isStaff
-        ? `/admin/employees/api/${maTaiKhoan}`
-        : `/api/customers/api/${maTaiKhoan}`;
+        ? `/admin/employees/by-email/${maTaiKhoan}`
+        : `/customer/by-email/${maTaiKhoan}`;
 
       await axiosInstance.patch(apiUrl, payload);
 
@@ -182,12 +198,12 @@ export default function Header({ isScrolled }) {
       };
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      alert("Cập nhật thông tin thành công!");
+      notify("Cập nhật thông tin thành công!", "success");
       setShowAccountPopup(false);
     } catch (err) {
       console.error("Lỗi cập nhật:", err);
       const msg = err.response?.data?.message || err.message || "Lỗi không xác định";
-      alert("Cập nhật thất bại: " + msg);
+      notify("Cập nhật thất bại: " + msg, "error");
     } finally {
       setProcessing(false);
     }
@@ -201,7 +217,7 @@ export default function Header({ isScrolled }) {
     >
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-3 lg:py-4">
-          <div className="min-w-0 flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
+          <div className="min-w-0 flex items-center gap-3 cursor-pointer" onClick={() => navigate("/customer")}>
             <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-gray-900 font-bold text-xl">
               G
             </div>
@@ -369,16 +385,11 @@ export default function Header({ isScrolled }) {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-lg font-medium mb-2 text-gray-700">Địa chỉ</label>
-                    <input
-                      type="text"
-                      value={formData.diaChi}
-                      onChange={(e) => setFormData({ ...formData, diaChi: e.target.value })}
-                      className="w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none text-lg text-gray-800 placeholder-gray-400"
-                      placeholder="Nhập địa chỉ"
-                    />
-                  </div>
+                <VietnamAddressSelects
+                  label="Địa chỉ Việt Nam"
+                  value={formData}
+                  onChange={(next) => setFormData({ ...formData, ...next })}
+                />
 
                   {/* Đổi mật khẩu */}
                   <div className="pt-6 border-t border-gray-200">

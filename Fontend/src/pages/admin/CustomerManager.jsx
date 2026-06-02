@@ -13,6 +13,8 @@ import {
   X,
 } from "lucide-react";
 import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
+import VietnamAddressSelects from "../../components/form/VietnamAddressSelects";
+import { buildVietnamAddress, parseVietnamAddress } from "../../utils/vietnamAddress";
 
 export default function CustomerManager() {
   const [customers, setCustomers] = useState([]);
@@ -36,6 +38,10 @@ export default function CustomerManager() {
     sdt: "",
     email: "",
     diaChi: "",
+    street: "",
+    province: "",
+    district: "",
+    ward: "",
     matKhau: "",
     confirmMatKhau: "", // thêm dòng này
   });
@@ -92,13 +98,19 @@ export default function CustomerManager() {
       sdt: "",
       email: "",
       diaChi: "",
+      street: "",
+      province: "",
+      district: "",
+      ward: "",
       matKhau: "",
+      confirmMatKhau: "",
     });
     setShowModal(true);
   };
 
   // Mở modal sửa
   const openEditModal = (cust) => {
+    const address = parseVietnamAddress(cust.diaChi || "");
     setIsEditMode(true);
     setCurrentCustomer({
       maKH: cust.maKH,
@@ -106,7 +118,9 @@ export default function CustomerManager() {
       sdt: cust.sdt || "",
       email: cust.email,
       diaChi: cust.diaChi || "",
+      ...address,
       matKhau: "", // không hiển thị mật khẩu cũ
+      confirmMatKhau: "",
     });
     setShowModal(true);
   };
@@ -117,6 +131,10 @@ export default function CustomerManager() {
       alert("Vui lòng nhập họ tên và email!");
       return;
     }
+    if (!currentCustomer.province || !currentCustomer.district || !currentCustomer.ward) {
+      alert("Vui lòng chọn đầy đủ tỉnh / huyện / xã của Việt Nam!");
+      return;
+    }
     if (!isEditMode && !currentCustomer.matKhau?.trim()) {
       alert("Vui lòng nhập mật khẩu khi thêm mới!");
       return;
@@ -125,14 +143,20 @@ export default function CustomerManager() {
     try {
       setProcessing(true);
       if (isEditMode) {
+        const diaChi = buildVietnamAddress(currentCustomer);
+        const {
+          maKH,
+          confirmMatKhau,
+          ...payload
+        } = currentCustomer;
         // PUT /admin/customers/{maKH}
         await axiosInstance.put(
-          `/admin/customers/${currentCustomer.maKH}`,
-          currentCustomer,
+          `/admin/customers/${maKH}`,
+          { ...payload, diaChi },
         );
         alert("Cập nhật khách hàng thành công!");
       } else {
-        // POST /web_garage/auth/register
+        // POST /auth/register
         //backend cần confirm
         // forntend ở tạo cũng cần
         // check confirm trước
@@ -142,9 +166,15 @@ export default function CustomerManager() {
         }
 
         // loại bỏ trước khi gửi
-        const { maKH, confirmMatKhau, ...dataToSend } = currentCustomer;
-
-        await axiosInstance.post("/web_garage/auth/register", dataToSend);
+        const {
+          maKH,
+          confirmMatKhau,
+          ...dataToSend
+        } = currentCustomer;
+        await axiosInstance.post("/auth/register", {
+          ...dataToSend,
+          diaChi: buildVietnamAddress(currentCustomer),
+        });
         alert("Thêm khách hàng thành công!");
       }
       setShowModal(false);
@@ -195,10 +225,6 @@ export default function CustomerManager() {
 
         {/* Bộ lọc */}
         <CollapsibleFilter title="Tìm kiếm & Lọc" icon={Search} accent="green">
-          <div className="flex items-center gap-3 mb-5">
-            <Search size={24} className="text-green-600" />
-            <h2 className="text-xl font-bold text-gray-800">Tìm kiếm & Lọc</h2>
-          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <input
               placeholder="Mã khách hàng"
@@ -367,18 +393,15 @@ export default function CustomerManager() {
                 className="px-6 py-5 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-green-300"
               />
 
-              <input
-                type="text"
-                placeholder="Địa chỉ"
-                value={currentCustomer.diaChi}
-                onChange={(e) =>
-                  setCurrentCustomer({
-                    ...currentCustomer,
-                    diaChi: e.target.value,
-                  })
-                }
-                className="px-6 py-5 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-green-300 col-span-2"
-              />
+              <div className="col-span-2">
+                <VietnamAddressSelects
+                  label="Địa chỉ Việt Nam"
+                  value={currentCustomer}
+                  onChange={(next) =>
+                    setCurrentCustomer((prev) => ({ ...prev, ...next }))
+                  }
+                />
+              </div>
 
               {!isEditMode && (
                 <>

@@ -13,6 +13,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
+import VietnamAddressSelects from "../../components/form/VietnamAddressSelects";
+import { buildVietnamAddress, parseVietnamAddress } from "../../utils/vietnamAddress";
 
 const API = "/admin/branches";
 const PAGE_SIZE = 10;
@@ -35,6 +37,10 @@ export default function BranchManager() {
     maChiNhanh: "",
     tenChiNhanh: "",
     diaChi: "",
+    street: "",
+    province: "",
+    district: "",
+    ward: "",
     sdt: "",
     email: "",
   });
@@ -72,11 +78,16 @@ export default function BranchManager() {
       return;
     }
     try {
+      if (!form.province || !form.district || !form.ward) {
+        alert("Vui lòng chọn đầy đủ tỉnh / huyện / xã của chi nhánh!");
+        return;
+      }
+      const diaChi = buildVietnamAddress(form);
       if (editing) {
-        await axiosInstance.put(`${API}/${form.maChiNhanh}`, form);
+        await axiosInstance.put(`${API}/${form.maChiNhanh}`, { ...form, diaChi });
         alert("Cập nhật thành công!");
       } else {
-        await axiosInstance.post(API, form);
+        await axiosInstance.post(API, { ...form, diaChi });
         alert("Thêm chi nhánh thành công!");
       }
       setShowForm(false);
@@ -85,6 +96,10 @@ export default function BranchManager() {
         maChiNhanh: "",
         tenChiNhanh: "",
         diaChi: "",
+        street: "",
+        province: "",
+        district: "",
+        ward: "",
         sdt: "",
         email: "",
       });
@@ -108,8 +123,18 @@ export default function BranchManager() {
     setEditing(branch);
     setForm(
       branch
-        ? { ...branch }
-        : { maChiNhanh: "", tenChiNhanh: "", diaChi: "", sdt: "", email: "" }
+        ? { ...branch, ...parseVietnamAddress(branch.diaChi || "") }
+        : {
+            maChiNhanh: "",
+            tenChiNhanh: "",
+            diaChi: "",
+            street: "",
+            province: "",
+            district: "",
+            ward: "",
+            sdt: "",
+            email: "",
+          }
     );
     setShowForm(true);
   };
@@ -385,13 +410,13 @@ export default function BranchManager() {
                   }
                   className="px-8 py-6 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-purple-300"
                 />
-                <textarea
-                  placeholder="Địa chỉ chi nhánh"
-                  value={form.diaChi}
-                  onChange={(e) => setForm({ ...form, diaChi: e.target.value })}
-                  rows="3"
-                  className="px-8 py-6 border-2 border-gray-300 rounded-2xl text-xl focus:ring-4 focus:ring-blue-300 resize-none"
-                />
+                <div className="md:col-span-2">
+                  <VietnamAddressSelects
+                    label="Địa chỉ chi nhánh"
+                    value={form}
+                    onChange={(next) => setForm((prev) => ({ ...prev, ...next }))}
+                  />
+                </div>
                 <input
                   placeholder="Số điện thoại"
                   value={form.sdt}

@@ -8,7 +8,8 @@ const API_BASE = `/customer`;
 export default function ContactSection() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-  const isLoggedIn = !!token;
+  const refreshToken = localStorage.getItem("refreshToken");
+  const isLoggedIn = !!token || !!refreshToken;
   const userData = JSON.parse(localStorage.getItem("user") || "{}");
   const maKH = userData.username || "";
 

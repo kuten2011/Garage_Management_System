@@ -1,11 +1,14 @@
 package DACNTT.garage.controller;
 
 import DACNTT.garage.dto.ServiceEntityDTO;
+import DACNTT.garage.dto.ServiceBatchCreateRequest;
 import DACNTT.garage.handle.ServiceEntityHandle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/admin/services")
@@ -20,9 +23,10 @@ public class ServiceEntityController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Double priceFrom,
-            @RequestParam(required = false) Double priceTo) {
+            @RequestParam(required = false) Double priceTo,
+            @RequestParam(required = false) String maChiNhanh) {
 
-        return serviceHandle.getAllServices(page, size, search, priceFrom, priceTo);
+        return serviceHandle.getAllServices(page, size, search, priceFrom, priceTo, maChiNhanh);
     }
 
     @GetMapping("/{maDV}")
@@ -33,6 +37,11 @@ public class ServiceEntityController {
     @PostMapping
     public ResponseEntity<ServiceEntityDTO> create(@RequestBody ServiceEntityDTO dto) {
         return serviceHandle.createService(dto);
+    }
+
+    @PostMapping("/batch")
+    public ResponseEntity<List<ServiceEntityDTO>> createBatch(@RequestBody ServiceBatchCreateRequest request) {
+        return serviceHandle.createServicesBatch(request);
     }
 
     @PutMapping("/{maDV}")

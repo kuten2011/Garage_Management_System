@@ -85,6 +85,9 @@ public class VehicleServiceImpl implements VehicleService {
         if (updateData.getChuKyBaoDuongThang() != null) {
             existing.setChuKyBaoDuongThang(updateData.getChuKyBaoDuongThang());
         }
+        if (updateData.getChiNhanh() != null && updateData.getChiNhanh().getMaChiNhanh() != null) {
+            existing.setChiNhanh(updateData.getChiNhanh());
+        }
 
         // Sửa lỗi: dùng getKhachHang().getMaKH() thay vì getMaKH()
         if (updateData.getKhachHang() != null && updateData.getKhachHang().getMaKH() != null) {

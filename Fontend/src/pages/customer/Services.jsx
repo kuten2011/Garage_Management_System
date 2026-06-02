@@ -8,11 +8,12 @@ import {
   Clock,
   Star,
   ArrowLeft,
+  Eye,
 } from "lucide-react";
 import axiosInstance from "../../api/axiosInstance";
 import CollapsibleFilter from "../../components/ui/CollapsibleFilter";
 
-const API = "/admin/services";
+const API = "/public/services";
 const PAGE_SIZE = 8;
 
 export default function ServicesPage() {
@@ -23,10 +24,13 @@ export default function ServicesPage() {
   const [searchInput, setSearchInput] = useState("");
   const [priceFromInput, setPriceFromInput] = useState("");
   const [priceToInput, setPriceToInput] = useState("");
+  const [branchInput, setBranchInput] = useState("");
 
   const [search, setSearch] = useState("");
   const [priceFrom, setPriceFrom] = useState("");
   const [priceTo, setPriceTo] = useState("");
+  const [branch, setBranch] = useState("");
+  const [branches, setBranches] = useState([]);
 
   const navigate = useNavigate();
 
@@ -49,6 +53,21 @@ export default function ServicesPage() {
     return () => clearTimeout(timer);
   }, [priceFromInput, priceToInput]);
 
+  useEffect(() => {
+    axiosInstance
+      .get("/public/branches?page=0&size=100")
+      .then((res) => setBranches(res.data?.content || res.data || []))
+      .catch(() => setBranches([]));
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setBranch(branchInput);
+      setPage(0);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [branchInput]);
+
   const fetchData = async () => {
     setLoading(true);
 
@@ -58,6 +77,7 @@ export default function ServicesPage() {
       if (search.trim()) params.search = search.trim();
       if (priceFrom) params.priceFrom = priceFrom;
       if (priceTo) params.priceTo = priceTo;
+      if (branch) params.maChiNhanh = branch;
 
       const res = await axiosInstance.get(API, { params });
 
@@ -78,7 +98,7 @@ export default function ServicesPage() {
   };
   useEffect(() => {
     fetchData();
-  }, [page, search, priceFrom, priceTo]);
+  }, [page, search, priceFrom, priceTo, branch]);
 
   const resetFilters = () => {
     setSearchInput("");
@@ -87,6 +107,8 @@ export default function ServicesPage() {
     setSearch("");
     setPriceFrom("");
     setPriceTo("");
+    setBranchInput("");
+    setBranch("");
     setPage(0);
   };
 
@@ -105,10 +127,10 @@ export default function ServicesPage() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Hero Banner */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-10 sm:px-6 sm:py-16">
+      <div className="bg-gradient-to-r from-gray-800 to-gray-900 text-white px-4 py-6 sm:px-6 sm:py-8">
         <div className="max-w-7xl mx-auto">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/customer")}
             className="flex items-center gap-2 text-yellow-400 hover:text-yellow-300 mb-6 transition"
           >
             <ArrowLeft size={20} />
@@ -116,9 +138,9 @@ export default function ServicesPage() {
           </button>
 
           <div className="text-center">
-            <h1 className="text-3xl sm:text-5xl font-bold mb-4">TẤT CẢ DỊCH VỤ</h1>
-            <p className="text-base sm:text-xl opacity-90">
-              Khám phá đầy đủ các dịch vụ chuyên nghiệp của chúng tôi
+            <h1 className="text-xl font-black tracking-tight sm:text-2xl">TẤT CẢ DỊCH VỤ</h1>
+            <p className="mx-auto mt-2 max-w-xl text-xs opacity-90 sm:text-sm">
+              Khám phá các dịch vụ chuyên nghiệp của chúng tôi
             </p>
           </div>
         </div>
@@ -126,28 +148,32 @@ export default function ServicesPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 sm:py-12">
         {/* Bộ lọc */}
-        <CollapsibleFilter title="Tìm kiếm dịch vụ" icon={Search} accent="yellow">
-          <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-3">
-            <Search size={28} className="text-yellow-600" />
-            Tìm kiếm dịch vụ
-          </h3>
+        <CollapsibleFilter title="Bộ lọc dịch vụ" icon={Search} accent="yellow">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            <input
+              type="text"
+              placeholder="Tên dịch vụ..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full px-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200 outline-none"
+            />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="relative">
-              <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                size={20}
-              />
-              <input
-                type="text"
-                placeholder="Tên dịch vụ..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 text-base border-2 border-gray-300 rounded-xl focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200 outline-none"
-              />
+            <div>
+              <select
+                value={branchInput}
+                onChange={(e) => setBranchInput(e.target.value)}
+                className="w-full rounded-xl border-2 border-gray-300 px-4 py-3 text-base outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-200"
+              >
+                <option value="">Tất cả chi nhánh</option>
+                {branches.map((item) => (
+                  <option key={item.maChiNhanh} value={item.maChiNhanh}>
+                    {item.tenChiNhanh} ({item.maChiNhanh})
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div className="md:col-span-2 space-y-3">
+            <div className="xl:col-span-1 space-y-3 md:col-span-2 xl:col-span-1">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <span className="text-gray-700 font-semibold">Giá:</span>
                 <input
@@ -213,20 +239,20 @@ export default function ServicesPage() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {data.content.map((service) => (
                 <div
                   key={service.maDV}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
+                  className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
-                  <div className="h-40 bg-gradient-to-br from-gray-800 to-gray-900 relative overflow-hidden flex items-center justify-center">
+                  <div className="h-32 bg-gradient-to-br from-gray-800 to-gray-900 relative overflow-hidden flex items-center justify-center">
                     <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-400 opacity-10 rounded-full -mr-12 -mt-12"></div>
                     <div className="absolute bottom-0 left-0 w-20 h-20 bg-yellow-400 opacity-10 rounded-full -ml-10 -mb-10"></div>
-                    <div className="relative text-center z-10 p-4">
+                    <div className="relative text-center z-10 p-3">
                       <div className="flex justify-center mb-2">
-                        <Wrench className="text-yellow-400" size={32} />
+                        <Wrench className="text-yellow-400" size={28} />
                       </div>
-                      <h3 className="text-lg font-bold text-white line-clamp-2">
+                      <h3 className="text-base font-bold text-white line-clamp-2">
                         {service.tenDV}
                       </h3>
                     </div>
@@ -236,26 +262,26 @@ export default function ServicesPage() {
                     />
                   </div>
 
-                  <div className="p-5">
-                    <div className="mb-4 bg-yellow-50 p-3 rounded-lg border-2 border-yellow-200">
+                  <div className="p-4">
+                    <div className="mb-3 bg-yellow-50 p-2.5 rounded-xl border border-yellow-200">
                       <div className="text-center">
-                        <p className="text-xs text-gray-600 mb-1">
+                        <p className="text-[11px] text-gray-600 mb-1">
                           Giá dịch vụ
                         </p>
-                        <p className="text-xl font-black text-red-600">
+                        <p className="text-lg font-black text-red-600">
                           {Number(service.giaTien).toLocaleString()}đ
                         </p>
                       </div>
                     </div>
 
-                    <div className="mb-4">
+                    <div className="mb-3">
                       <p className="text-gray-600 text-sm leading-relaxed line-clamp-3">
                         {service.moTa ||
                           "Dịch vụ chuyên nghiệp, đảm bảo chất lượng cao"}
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-center gap-3 mb-4 text-xs text-gray-500">
+                    <div className="flex items-center justify-center gap-3 mb-3 text-[11px] text-gray-500">
                       <div className="flex items-center gap-1">
                         <Clock size={14} className="text-yellow-600" />
                         <span>Nhanh</span>
@@ -266,11 +292,13 @@ export default function ServicesPage() {
                       </div>
                     </div>
 
-                    <a href="tel:0944799819">
-                      <button className="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
-                        Đặt dịch vụ ngay
-                      </button>
-                    </a>
+                    <button
+                      onClick={() => navigate(`/customer/services/${service.maDV}`)}
+                      className="w-full inline-flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2.5 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg text-sm"
+                    >
+                      <Eye size={18} />
+                      Xem chi tiết
+                    </button>
                   </div>
                 </div>
               ))}

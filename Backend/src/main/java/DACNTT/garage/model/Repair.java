@@ -23,6 +23,10 @@ public class Repair {
     @JoinColumn(name = "maNV")
     private Employee nhanVien;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "maChiNhanh")
+    private Branch chiNhanh;
+
     @ManyToOne
     @JoinColumn(name = "bienSo")
     private Vehicle xe;

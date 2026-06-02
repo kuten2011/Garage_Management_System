@@ -7,7 +7,6 @@ import DACNTT.garage.model.Employee;
 import DACNTT.garage.repository.EmployeeRepository;
 import DACNTT.garage.service.EmployeeService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,7 +39,7 @@ public class EmployeeController {
             Employee employee = employeeService.createEmployee(employeeDTO);
             return ResponseEntity.ok(employeeMapper.toEmployeeDTO(employee));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Loi: " + e.getMessage());
         }
     }
 
@@ -51,7 +50,6 @@ public class EmployeeController {
 
     @GetMapping("/{maNV}")
     public ResponseEntity<EmployeeDTO> getEmployeeByMaNV(@PathVariable String maNV) {
-        System.out.println("test");
         return employeeRepository.findById(maNV)
                 .map(employeeMapper::toEmployeeDTO)
                 .map(ResponseEntity::ok)
@@ -62,7 +60,6 @@ public class EmployeeController {
     public ResponseEntity<EmployeeDTO> updateEmployee(
             @PathVariable String maNV,
             @RequestBody EmployeeDTO dto) {
-        // Tương tự: đảm bảo mã trong DTO khớp với path
         if (dto.getMaNV() != null && !dto.getMaNV().equals(maNV)) {
             return ResponseEntity.badRequest().body(null);
         }
@@ -79,7 +76,6 @@ public class EmployeeController {
     public ResponseEntity<EmployeeDTO> updateEmployeee(
             @PathVariable String maNV,
             @RequestBody EmployeeDTO dto) {
-        // Tương tự: đảm bảo mã trong DTO khớp với path
         if (dto.getMaNV() != null && !dto.getMaNV().equals(maNV)) {
             return ResponseEntity.badRequest().body(null);
         }
@@ -95,30 +91,28 @@ public class EmployeeController {
     @DeleteMapping("/{maNV}")
     public ResponseEntity<?> deleteEmployee(@PathVariable String maNV) {
         employeeService.deleteEmployee(maNV);
-        return ResponseEntity.ok("Xóa thành công");
+        return ResponseEntity.ok("Xoa thanh cong");
     }
 
-    //Only in UI
-    @GetMapping("/api/{maNV}")
-    public ResponseEntity<EmployeeDTO> getEmployeeByMaNVV(@PathVariable String maNV) {
-        System.out.println("test");
-        return employeeRepository.findByEmail(maNV)
+    @GetMapping("/by-email/{email}")
+    public ResponseEntity<EmployeeDTO> getEmployeeByEmail(@PathVariable String email) {
+        return employeeRepository.findByEmail(email)
                 .map(employeeMapper::toEmployeeDTO)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PatchMapping("/api/{maNV}")
+    @PatchMapping("/by-email/{email}")
     public ResponseEntity<EmployeeDTO> updateEmployeeInUi(
-            @PathVariable String maNV,
+            @PathVariable String email,
             @RequestBody EmployeeDTO dto) {
-        String maNVV = employeeRepository.findByEmail(maNV).get().getMaNV();
-        if (dto.getMaNV() != null && !dto.getMaNV().equals(maNVV)) {
+        String maNV = employeeRepository.findByEmail(email).get().getMaNV();
+        if (dto.getMaNV() != null && !dto.getMaNV().equals(maNV)) {
             return ResponseEntity.badRequest().body(null);
         }
-        dto.setMaNV(maNVV);
+        dto.setMaNV(maNV);
         try {
-            Employee updated = employeeService.updateEmployee(maNVV, dto);
+            Employee updated = employeeService.updateEmployee(maNV, dto);
             return ResponseEntity.ok(employeeMapper.toEmployeeDTO(updated));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(null);

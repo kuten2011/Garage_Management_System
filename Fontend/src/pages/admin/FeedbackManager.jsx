@@ -5,6 +5,7 @@ import {
   MessageSquare,
   Star,
   Car,
+  Building,
   User,
   Clock,
   CheckCircle,
@@ -168,6 +169,12 @@ export default function FeedbackManager() {
                       <User size={18} />
                       <span>
                         {fb.hoTenKhach} ({fb.maKH})
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600 mt-2">
+                      <Building size={18} className="text-indigo-600" />
+                      <span>
+                        {fb.tenChiNhanh || fb.maChiNhanh || "Chưa chọn chi nhánh"}
                       </span>
                     </div>
                   </div>

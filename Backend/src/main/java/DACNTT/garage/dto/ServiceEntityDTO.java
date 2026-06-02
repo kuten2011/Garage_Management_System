@@ -14,4 +14,6 @@ public class ServiceEntityDTO {
     private String tenDV;
     private Double giaTien;
     private String moTa;
+    private String maChiNhanh;
+    private String tenChiNhanh;
 }

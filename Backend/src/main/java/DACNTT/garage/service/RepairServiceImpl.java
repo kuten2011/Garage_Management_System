@@ -71,6 +71,8 @@ public class RepairServiceImpl implements RepairService {
         Repair existing = findById(maPhieu);
         existing.setLichHen(updateData.getLichHen());
         existing.setNhanVien(updateData.getNhanVien());
+        existing.setChiNhanh(updateData.getChiNhanh());
+        existing.setXe(updateData.getXe());
         existing.setNgayLap(updateData.getNgayLap());
         existing.setGhiChu(updateData.getGhiChu());
         existing.setTrangThai(updateData.getTrangThai());

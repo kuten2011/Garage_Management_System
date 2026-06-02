@@ -20,6 +20,10 @@ public class Feedback {
     @JoinColumn(name = "maPSC", nullable = false)
     private Repair phieuSuaChua;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "maChiNhanh")
+    private Branch chiNhanh;
+
     @Column(nullable = false)
     private String noiDung;
 

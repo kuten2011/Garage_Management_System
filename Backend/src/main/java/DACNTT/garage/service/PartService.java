@@ -18,6 +18,7 @@ public interface PartService {
             Double priceFrom, Double priceTo,
             Integer stockFrom, Integer stockTo,
             Integer stockUnder, Integer stockAbove,
+            String maChiNhanh,
             Pageable pageable
     );
 

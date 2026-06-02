@@ -61,7 +61,6 @@ public class RepairHandle {
     @Autowired
     private ReportRepository reportRepository;
 
-    private static final String MA_CHI_NHANH = "CN01"; // Có thể lấy động sau
     private static final DateTimeFormatter THANG_NAM_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM");
 
     public ResponseEntity<Page<RepairDTO>> getAllRepairs(int page, int size, String sort) {
@@ -92,21 +91,29 @@ public class RepairHandle {
             }
 
             Booking lichHen = bookingRepository.findById(dto.getMaLich())
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy lịch hẹn: " + dto.getMaLich()));
+                    .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y lá»‹ch háº¹n: " + dto.getMaLich()));
+            Branch chiNhanh = resolveBranchIfPresent(dto.getMaChiNhanh());
 
             Employee nhanVien = null;
             if (dto.getMaNV() != null && !dto.getMaNV().isBlank()) {
                 nhanVien = employeeRepository.findById(dto.getMaNV())
-                        .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên: " + dto.getMaNV()));
+                        .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y nhÃ¢n viÃªn: " + dto.getMaNV()));
+                if (chiNhanh == null) {
+                    chiNhanh = nhanVien.getChiNhanh();
+                } else {
+                    validateEmployeeInBranch(nhanVien, chiNhanh);
+                }
             }
 
             Repair repair = repairMapper.toRepair(dto);
             repair.setLichHen(lichHen);
             repair.setNhanVien(nhanVien);
+            repair.setChiNhanh(chiNhanh);
 
             if (dto.getBienSo() != null && !dto.getBienSo().trim().isEmpty()) {
                 Vehicle xe = vehicleRepository.findById(dto.getBienSo().trim())
-                        .orElseThrow(() -> new RuntimeException("Không tìm thấy xe với biển số: " + dto.getBienSo()));
+                        .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y xe vá»›i biá»ƒn sá»‘: " + dto.getBienSo()));
+
                 repair.setXe(xe);
             }
             Repair saved = repairService.createRepair(repair);
@@ -118,14 +125,14 @@ public class RepairHandle {
             RepairDTO resultDTO = repairMapper.toRepairDTO(saved);
             resultDTO.setTongTien(tongTien);
             if (resultDTO.getThanhToanStatus() == null) {
-                resultDTO.setThanhToanStatus("Chưa thanh toán");
+                resultDTO.setThanhToanStatus("ChÆ°a thanh toÃ¡n");
             }
 
             return ResponseEntity.status(HttpStatus.CREATED).body(resultDTO);
 
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
-                    .body(RepairDTO.builder().ghiChu("Lỗi: " + e.getMessage()).build());
+                    .body(RepairDTO.builder().ghiChu("Lá»—i: " + e.getMessage()).build());
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -138,12 +145,42 @@ public class RepairHandle {
                 return ResponseEntity.badRequest().build();
             }
 
-            Repair repair = repairMapper.toRepair(dto);
+            Repair repair = repairService.findById(maPhieu);
+            Booking lichHen = bookingRepository.findById(dto.getMaLich())
+                    .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y lá»‹ch háº¹n: " + dto.getMaLich()));
+            Branch chiNhanh = resolveBranchIfPresent(dto.getMaChiNhanh());
+
+            Employee nhanVien = null;
+            if (dto.getMaNV() != null && !dto.getMaNV().isBlank()) {
+                nhanVien = employeeRepository.findById(dto.getMaNV())
+                        .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y nhÃ¢n viÃªn: " + dto.getMaNV()));
+                if (chiNhanh == null) {
+                    chiNhanh = nhanVien.getChiNhanh();
+                } else {
+                    validateEmployeeInBranch(nhanVien, chiNhanh);
+                }
+            }
+
+            Vehicle xe = null;
+            if (dto.getBienSo() != null && !dto.getBienSo().trim().isEmpty()) {
+                xe = vehicleRepository.findById(dto.getBienSo().trim())
+                        .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y xe vá»›i biá»ƒn sá»‘: " + dto.getBienSo()));
+
+            }
+
+            repair.setLichHen(lichHen);
+            repair.setNhanVien(nhanVien);
+            repair.setChiNhanh(chiNhanh);
+            repair.setXe(xe);
+            repair.setNgayLap(dto.getNgayLap());
+            repair.setGhiChu(dto.getGhiChu());
+            repair.setTrangThai(dto.getTrangThai());
+
             Repair updated = repairService.update(maPhieu, repair);
             return ResponseEntity.ok(repairMapper.toRepairDTO(updated));
 
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
@@ -180,9 +217,9 @@ public class RepairHandle {
         if (repair == null) {
             return ResponseEntity.notFound().build();
         }
-        // Cập nhật trạng thái
-        repair.setThanhToanStatus("Đã thanh toán");
-        repair.setTrangThai("Hoàn thành");
+        // Cáº­p nháº­t tráº¡ng thÃ¡i
+        repair.setThanhToanStatus("ÄÃ£ thanh toÃ¡n");
+        repair.setTrangThai("HoÃ n thÃ nh");
         repair = repairService.save(repair);
         return ResponseEntity.ok(repairMapper.toRepairDTO(repair));
     }
@@ -192,16 +229,23 @@ public class RepairHandle {
             Repair repair = repairService.getRepairById(maPhieu);
             if (repair == null) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(Map.of("error", "Không tìm thấy phiếu sửa chữa"));
+                        .body(Map.of("error", "KhÃ´ng tÃ¬m tháº¥y phiáº¿u sá»­a chá»¯a"));
             }
+
+            boolean isPaidStatus = "ÄÃ£ thanh toÃ¡n".equals(status);
+            boolean wasPaid = "ÄÃ£ thanh toÃ¡n".equals(repair.getThanhToanStatus());
+            if (isPaidStatus && !wasPaid) {
+                repair = updateSumMoney(maPhieu);
+            }
+
             repair.setThanhToanStatus(status);
-            if ("Đã thanh toán".equals(status)) {
-                repair.setTrangThai("Hoàn thành");
+            if (isPaidStatus) {
+                repair.setTrangThai("HoÃ n thÃ nh");
             }
             Repair updated = repairService.update(maPhieu, repair);
 
             return ResponseEntity.ok(Map.of(
-                    "message", "Cập nhật trạng thái thanh toán thành công",
+                    "message", "Cáº­p nháº­t tráº¡ng thÃ¡i thanh toÃ¡n thÃ nh cÃ´ng",
                     "maPhieu", maPhieu,
                     "thanhToanStatus", status,
                     "trangThai", updated.getTrangThai()
@@ -209,7 +253,7 @@ public class RepairHandle {
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
-                    .body(Map.of("error", "Lỗi cập nhật: " + e.getMessage()));
+                    .body(Map.of("error", "Lá»—i cáº­p nháº­t: " + e.getMessage()));
         }
     }
 
@@ -222,7 +266,7 @@ public class RepairHandle {
 //            double tongPT = repairPartService.sumThanhTienByMaPhieu(repair.getMaPhieu());
 //            dto.setTongTien(tongDV + tongPT);
 //            if (dto.getThanhToanStatus() == null) {
-//                dto.setThanhToanStatus("Chưa thanh toán");
+//                dto.setThanhToanStatus("ChÆ°a thanh toÃ¡n");
 //            }
 //            return dto;
 //        });
@@ -234,7 +278,7 @@ public class RepairHandle {
         return repairs.stream().map(repair -> {
                     RepairDTO dto = repairMapper.toRepairDTO(repair);
 
-                    // Tính tổng tiền
+                    // TÃ­nh tá»•ng tiá»n
                     double tongDV = repairServiceService.sumThanhTienByMaPhieu(repair.getMaPhieu());
                     double tongPT = repairPartService.sumThanhTienByMaPhieu(repair.getMaPhieu());
                     dto.setTongTien(tongDV + tongPT);
@@ -249,7 +293,7 @@ public class RepairHandle {
                             });
 
                     if (dto.getThanhToanStatus() == null) {
-                        dto.setThanhToanStatus("Chưa thanh toán");
+                        dto.setThanhToanStatus("ChÆ°a thanh toÃ¡n");
                     }
 
                     return dto;
@@ -259,61 +303,79 @@ public class RepairHandle {
 
     @Transactional
     public Repair updateSumMoney(String maPhieu) {
-        // 1. Tìm phiếu sửa chữa
         Repair repair = repairRepository.findById(maPhieu)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu sửa chữa với mã: " + maPhieu));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y phiáº¿u sá»­a chá»¯a vá»›i mÃ£: " + maPhieu));
 
-        // 2. Tính tổng tiền phụ tùng + dịch vụ
+        Branch chiNhanh = resolveRepairBranch(repair);
+        String maChiNhanh = chiNhanh.getMaChiNhanh();
+
         double tongDV = repairServiceService.sumThanhTienByMaPhieu(maPhieu);
         double tongPT = repairPartService.sumThanhTienByMaPhieu(maPhieu);
         double tongTien = tongDV + tongPT;
 
-        // 3. Cập nhật tổng tiền và ngày hoàn thành cho phiếu sửa chữa
         repair.setTongTien(tongTien);
         repair.setNgayHoanThanh(LocalDate.now());
 
-        // 4. Cập nhật báo cáo doanh thu tháng hiện tại
-        String thangNamHienTai = YearMonth.now().format(THANG_NAM_FORMATTER); // "2026-01"
-
+        String thangNamHienTai = YearMonth.now().format(THANG_NAM_FORMATTER);
         Report report = reportRepository
-                .findByChiNhanh_MaChiNhanhAndThangNam(MA_CHI_NHANH, thangNamHienTai)
-                .orElseGet(() -> {
-                    // Nếu chưa có báo cáo tháng này → tạo mới
-                    Report newReport = new Report();
+                .findByChiNhanh_MaChiNhanhAndThangNam(maChiNhanh, thangNamHienTai)
+                .orElseGet(() -> createMonthlyReport(chiNhanh, thangNamHienTai));
 
-                    // Tạo mã báo cáo tự động (ví dụ: BC-CN01-202601)
-                    String maBC = "BC-" + MA_CHI_NHANH + "-" + thangNamHienTai.replace("-", "");
-                    newReport.setMaBC(maBC);
-
-                    // Giả sử bạn có cách lấy entity Branch, ví dụ:
-                    Branch chiNhanh = new Branch();
-                    chiNhanh.setMaChiNhanh(MA_CHI_NHANH);
-                    // Hoặc inject BranchRepository và findById
-                    newReport.setChiNhanh(chiNhanh);
-
-                    newReport.setThangNam(thangNamHienTai);
-                    newReport.setDoanhThu(0.0);
-                    newReport.setSoXePhucVu(0);
-
-                    return reportRepository.save(newReport); // lưu để có ID hợp lệ
-                });
-
-        // Cộng dồn doanh thu và số xe phục vụ
-        report.setDoanhThu(report.getDoanhThu() + tongTien);
-        report.setSoXePhucVu(report.getSoXePhucVu() + 1);
-
-        // Lưu lại
+        report.setDoanhThu((report.getDoanhThu() != null ? report.getDoanhThu() : 0.0) + tongTien);
+        report.setSoXePhucVu((report.getSoXePhucVu() != null ? report.getSoXePhucVu() : 0) + 1);
         reportRepository.save(report);
+
         return repairRepository.save(repair);
+    }
+
+    private Branch resolveBranchIfPresent(String maChiNhanh) {
+        if (maChiNhanh == null || maChiNhanh.isBlank()) {
+            return null;
+        }
+        String normalized = maChiNhanh.trim().toUpperCase();
+        return branchRepository.findById(normalized)
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y chi nhÃ¡nh: " + normalized));
+    }
+
+    private void validateEmployeeInBranch(Employee nhanVien, Branch chiNhanh) {
+        if (nhanVien.getChiNhanh() == null ||
+                !chiNhanh.getMaChiNhanh().equals(nhanVien.getChiNhanh().getMaChiNhanh())) {
+            throw new RuntimeException("NhÃ¢n viÃªn khÃ´ng thuá»™c chi nhÃ¡nh " + chiNhanh.getMaChiNhanh());
+        }
+    }
+
+
+    private Branch resolveRepairBranch(Repair repair) {
+        if (repair.getChiNhanh() != null) {
+            return repair.getChiNhanh();
+        }
+        if (repair.getNhanVien() == null) {
+            throw new RuntimeException("Phiáº¿u sá»­a chá»¯a pháº£i cÃ³ nhÃ¢n viÃªn phá»¥ trÃ¡ch Ä‘á»ƒ xÃ¡c Ä‘á»‹nh chi nhÃ¡nh");
+        }
+        if (repair.getNhanVien().getChiNhanh() == null) {
+            throw new RuntimeException("NhÃ¢n viÃªn " + repair.getNhanVien().getMaNV() + " chÆ°a Ä‘Æ°á»£c gáº¯n chi nhÃ¡nh");
+        }
+        return repair.getNhanVien().getChiNhanh();
+    }
+
+    private Report createMonthlyReport(Branch chiNhanh, String thangNam) {
+        Report newReport = new Report();
+        String maBC = "BC-" + chiNhanh.getMaChiNhanh() + "-" + thangNam.replace("-", "");
+        newReport.setMaBC(maBC);
+        newReport.setChiNhanh(chiNhanh);
+        newReport.setThangNam(thangNam);
+        newReport.setDoanhThu(0.0);
+        newReport.setSoXePhucVu(0);
+        return reportRepository.save(newReport);
     }
 
     public RepairDTO getRepairDTOById(String maPhieu) {
         Repair repair = repairRepository.findById(maPhieu)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu sửa chữa với mã: " + maPhieu));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y phiáº¿u sá»­a chá»¯a vá»›i mÃ£: " + maPhieu));
 
         RepairDTO dto = repairMapper.toRepairDTO(repair);
 
-        // Tính tổng tiền từ dịch vụ + phụ tùng
+        // TÃ­nh tá»•ng tiá»n tá»« dá»‹ch vá»¥ + phá»¥ tÃ¹ng
         double tongDV = repairServiceService.sumThanhTienByMaPhieu(maPhieu);
         double tongPT = repairPartService.sumThanhTienByMaPhieu(maPhieu);
         double tongTien = tongDV + tongPT;
@@ -321,15 +383,15 @@ public class RepairHandle {
         dto.setTongTien(tongTien);
         repairRepository.save(repair);
 
-        // Mặc định trạng thái thanh toán nếu null
+        // Máº·c Ä‘á»‹nh tráº¡ng thÃ¡i thanh toÃ¡n náº¿u null
         if (dto.getThanhToanStatus() == null) {
-            dto.setThanhToanStatus("Chưa thanh toán");
+            dto.setThanhToanStatus("ChÆ°a thanh toÃ¡n");
         }
 
-        // Mặc định chi nhánh CN01 cho nhân viên nếu chưa có
+        // Máº·c Ä‘á»‹nh chi nhÃ¡nh CN01 cho nhÃ¢n viÃªn náº¿u chÆ°a cÃ³
         if (repair.getNhanVien() != null && repair.getNhanVien().getChiNhanh() == null) {
             Branch defaultBranch = branchRepository.findById("CN01")
-                    .orElseThrow(() -> new RuntimeException("Không tìm thấy chi nhánh"));
+                    .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y chi nhÃ¡nh"));
             repair.getNhanVien().setChiNhanh(defaultBranch);
             employeeRepository.save(repair.getNhanVien());
         }
@@ -337,3 +399,6 @@ public class RepairHandle {
         return dto;
     }
 }
+
+
+

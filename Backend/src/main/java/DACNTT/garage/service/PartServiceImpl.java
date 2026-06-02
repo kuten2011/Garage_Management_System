@@ -54,6 +54,9 @@ public class PartServiceImpl implements PartService {
         if (updateData.getHinhAnh() != null) {
             existing.setHinhAnh(updateData.getHinhAnh());
         }
+        if (updateData.getChiNhanh() != null && updateData.getChiNhanh().getMaChiNhanh() != null) {
+            existing.setChiNhanh(updateData.getChiNhanh());
+        }
         return partRepository.save(existing);
     }
 
@@ -81,6 +84,7 @@ public class PartServiceImpl implements PartService {
                                   Double priceFrom, Double priceTo,
                                   Integer stockFrom, Integer stockTo,
                                   Integer stockUnder, Integer stockAbove,
+                                  String maChiNhanh,
                                   Pageable pageable) {
         List<Specification<Part>> specs = new ArrayList<>();
 
@@ -112,6 +116,11 @@ public class PartServiceImpl implements PartService {
         }
         if (stockAbove != null) {
             specs.add((root, query, cb) -> cb.gt(root.get("soLuongTon"), stockAbove));
+        }
+
+        if (maChiNhanh != null && !maChiNhanh.isBlank()) {
+            String normalized = maChiNhanh.trim().toUpperCase();
+            specs.add((root, query, cb) -> cb.equal(root.join("chiNhanh").get("maChiNhanh"), normalized));
         }
 
         Specification<Part> finalSpec = specs.stream()

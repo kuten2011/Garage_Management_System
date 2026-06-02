@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, Clock, Package, ShieldCheck, Star } from "lucide-react";
 import axiosInstance from "../../api/axiosInstance";
 
-const API = `/admin/parts`;
+const API = `/public/parts`;
 const DEFAULT_PART_IMAGE = "https://placehold.net/400x400.png";
 
 export default function PartsSection() {
@@ -52,7 +52,7 @@ export default function PartsSection() {
           </div>
 
           <button
-            onClick={() => navigate("/parts")}
+            onClick={() => navigate("/customer/parts")}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-yellow-400 px-5 py-3 font-bold text-slate-950 shadow-lg shadow-yellow-500/20 transition hover:-translate-y-0.5 hover:bg-yellow-300"
           >
             Xem phụ tùng
@@ -73,7 +73,7 @@ export default function PartsSection() {
                 <button
                   key={part.maPT}
                   type="button"
-                  onClick={() => navigate("/parts")}
+                  onClick={() => navigate(`/customer/parts/${part.maPT}`)}
                   className="home-part-card group overflow-hidden rounded-2xl bg-white text-left shadow-lg ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-2xl"
                   data-reveal
                   style={{ transitionDelay: `${index * 55}ms` }}

@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import {
   CalendarDays,
   Car,
+  Building,
   Wrench,
   DollarSign,
   Star,
@@ -12,6 +13,7 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
+import { notify } from "../../utils/notify";
 
 const BASE_API = "/customer";
 const REPAIR_API = `${BASE_API}/repairs`;
@@ -26,6 +28,8 @@ export default function MyRepairs() {
   const [selectedRepair, setSelectedRepair] = useState(null);
   const [rating, setRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("");
+  const [branches, setBranches] = useState([]);
   const [isViewMode, setIsViewMode] = useState(false);
 
   const userData = JSON.parse(localStorage.getItem("user") || "{}");
@@ -44,7 +48,7 @@ export default function MyRepairs() {
             : [];
         setRepairs(list);
       } catch (err) {
-        alert("Không thể tải phiếu sửa chữa của bạn!");
+        notify("Không thể tải phiếu sửa chữa của bạn!", "error");
       } finally {
         setLoading(false);
       }
@@ -53,17 +57,25 @@ export default function MyRepairs() {
     if (maKH) fetchMyRepairs();
   }, [maKH]);
 
+  useEffect(() => {
+    axiosInstance
+      .get("/public/branches?page=0&size=100")
+      .then((res) => setBranches(res.data.content || res.data || []))
+      .catch(() => setBranches([]));
+  }, []);
+
   const handleSendFeedback = async () => {
-    if (rating === 0) return alert("Vui lòng chọn số sao!");
-    if (!feedbackText.trim()) return alert("Vui lòng nhập nội dung phản hồi!");
+    if (rating === 0) return notify("Vui lòng chọn số sao!", "error");
+    if (!feedbackText.trim()) return notify("Vui lòng nhập nội dung phản hồi!", "error");
 
     try {
       await axiosInstance.post(`${FEEDBACK_API}/${selectedRepair.maPhieu}`, {
         noiDung: feedbackText,
         soSao: rating,
+        maChiNhanh: selectedBranch,
       });
 
-      alert("Cảm ơn bạn đã đánh giá!");
+      notify("Cảm ơn bạn đã đánh giá!", "success");
       setShowPopup(false);
       setRating(0);
       setFeedbackText("");
@@ -78,7 +90,7 @@ export default function MyRepairs() {
           : [];
       setRepairs(list);
     } catch (err) {
-      alert("Gửi phản hồi thất bại!");
+      notify("Gửi phản hồi thất bại!", "error");
     }
   };
 
@@ -89,9 +101,11 @@ export default function MyRepairs() {
     if (viewMode) {
       setRating(repair.soSao || 0);
       setFeedbackText(repair.noiDungPhanHoi || "");
+      setSelectedBranch(repair.maChiNhanh || repair.xe?.maChiNhanh || "");
     } else {
       setRating(0);
       setFeedbackText("");
+      setSelectedBranch(repair.maChiNhanh || repair.xe?.maChiNhanh || "");
     }
 
     setShowPopup(true);
@@ -114,7 +128,7 @@ export default function MyRepairs() {
     );
   };
 
-  if (!localStorage.getItem("token")) {
+  if (!localStorage.getItem("token") && !localStorage.getItem("refreshToken")) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -231,13 +245,17 @@ export default function MyRepairs() {
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-3 mb-2">
-                          <span className="font-medium">Đánh giá:</span>
-                          {renderStars(r.soSao, 26)}
-                          <span className="font-bold text-lg ml-2">
-                            {r.soSao}/5
-                          </span>
-                        </div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="font-medium">Đánh giá:</span>
+                    {renderStars(r.soSao, 26)}
+                    <span className="font-bold text-lg ml-2">
+                      {r.soSao}/5
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 mb-2 text-gray-700">
+                    <Building size={18} className="text-indigo-600" />
+                    <span>{r.maChiNhanh || r.xe?.maChiNhanh || "Chưa chọn chi nhánh"}</span>
+                  </div>
 
                         {r.noiDungPhanHoi && (
                           <p className="text-gray-700 italic truncate mt-2">
@@ -368,6 +386,24 @@ export default function MyRepairs() {
                   )}
                 </div>
 
+                <div className="mb-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Chọn chi nhánh
+                  </label>
+                  <select
+                    value={selectedBranch}
+                    onChange={(e) => setSelectedBranch(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-2xl focus:ring-4 focus:ring-indigo-300 outline-none"
+                  >
+                    <option value="">-- Chọn chi nhánh --</option>
+                    {branches.map((branch) => (
+                      <option key={branch.maChiNhanh} value={branch.maChiNhanh}>
+                        {branch.tenChiNhanh} ({branch.maChiNhanh})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <textarea
                   rows="6"
                   placeholder="Chia sẻ trải nghiệm của bạn (nhân viên, chất lượng sửa chữa, thời gian...)"
@@ -385,7 +421,7 @@ export default function MyRepairs() {
                   </button>
                   <button
                     onClick={handleSendFeedback}
-                    disabled={rating === 0 || !feedbackText.trim()}
+                    disabled={rating === 0 || !feedbackText.trim() || !selectedBranch}
                     className="px-16 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-bold text-xl shadow-2xl hover:shadow-3xl transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Gửi phản hồi

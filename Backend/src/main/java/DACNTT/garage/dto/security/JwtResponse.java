@@ -12,6 +12,7 @@ import org.springframework.security.core.GrantedAuthority;
 @AllArgsConstructor
 public class JwtResponse {
     private String jwt;
+    private String refreshToken;
     private String username;
     private Collection<? extends GrantedAuthority> authorities;
 }
