@@ -48,9 +48,9 @@ Hệ thống hỗ trợ số hóa toàn bộ quy trình vận hành của garage
 ```
 [React + Vite] (Vercel)
        ↓ REST API (Axios + JWT)
-[Spring Boot JAR] (Railway)
+[Spring Boot JAR] (Render)
        ↓
-[PostgreSQL] (Railway)
+[PostgreSQL] (Neon)
 ```
 
 ---
