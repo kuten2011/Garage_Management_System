@@ -5,6 +5,7 @@ import DACNTT.garage.handle.ReportHandle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,8 +20,15 @@ public class ReportController {
 
     // Tất cả báo cáo
     @GetMapping
-    public ResponseEntity<List<ReportDTO>> getAllReports() {
-        return reportHandle.getAllReports();
+    public ResponseEntity<List<ReportDTO>> getAllReports(
+            @RequestParam(required = false) String maChiNhanh,
+            @RequestParam(required = false) String fromMonth,
+            @RequestParam(required = false) String toMonth,
+            @RequestParam(required = false) Double minRevenue,
+            @RequestParam(required = false) Double maxRevenue,
+            @RequestParam(required = false) Integer minCars,
+            @RequestParam(required = false) Integer maxCars) {
+        return reportHandle.getAllReports(maChiNhanh, fromMonth, toMonth, minRevenue, maxRevenue, minCars, maxCars);
     }
 
     // Báo cáo 12 tháng gần nhất (cho biểu đồ)
@@ -31,7 +39,14 @@ public class ReportController {
 
     // Tổng hợp nhanh (doanh thu, số xe, chi nhánh)
     @GetMapping("/summary")
-    public ResponseEntity<?> getSummary() {
-        return reportHandle.getSummary();
+    public ResponseEntity<?> getSummary(
+            @RequestParam(required = false) String maChiNhanh,
+            @RequestParam(required = false) String fromMonth,
+            @RequestParam(required = false) String toMonth,
+            @RequestParam(required = false) Double minRevenue,
+            @RequestParam(required = false) Double maxRevenue,
+            @RequestParam(required = false) Integer minCars,
+            @RequestParam(required = false) Integer maxCars) {
+        return reportHandle.getSummary(maChiNhanh, fromMonth, toMonth, minRevenue, maxRevenue, minCars, maxCars);
     }
 }

@@ -21,13 +21,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Employee employee = employeeRepository.findByEmail(email).orElse(null);
+        String normalizedEmail = email == null ? "" : email.trim().toLowerCase();
+
+        Employee employee = employeeRepository.findByEmail(normalizedEmail).orElse(null);
         if (employee != null) {
             return UserDetailsImpl.build(employee);
         }
 
-        Customer customer = customerRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng với email: " + email));
+        Customer customer = customerRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng với email: " + normalizedEmail));
 
         return UserDetailsImpl.build(customer);
     }

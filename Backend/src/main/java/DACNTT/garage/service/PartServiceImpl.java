@@ -16,7 +16,8 @@ import java.util.List;
 @Transactional
 public class PartServiceImpl implements PartService {
 
-    @Autowired private PartRepository partRepository;
+    @Autowired
+    private PartRepository partRepository;
 
     @Override
     public Page<Part> getAllParts(Pageable pageable) {
@@ -26,7 +27,7 @@ public class PartServiceImpl implements PartService {
     @Override
     public Part getPartById(String maPT) {
         return partRepository.findById(maPT)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phụ tùng: " + maPT));
+                .orElseThrow(() -> new RuntimeException("KhÃ´ng tÃ¬m tháº¥y phá»¥ tÃ¹ng: " + maPT));
     }
 
     @Transactional
@@ -36,7 +37,7 @@ public class PartServiceImpl implements PartService {
         } else {
             part.setMaPT(part.getMaPT().trim().toUpperCase());
             if (partRepository.existsByMaPT(part.getMaPT())) {
-                throw new RuntimeException("Mã phụ tùng " + part.getMaPT() + " đã tồn tại!");
+                throw new RuntimeException("MÃ£ phá»¥ tÃ¹ng " + part.getMaPT() + " Ä‘Ã£ tá»“n táº¡i!");
             }
         }
         return partRepository.save(part);
@@ -46,7 +47,7 @@ public class PartServiceImpl implements PartService {
     public Part updatePart(String maPT, Part updateData) {
         Part existing = getPartById(maPT);
         if (!maPT.equals(updateData.getMaPT())) {
-            throw new RuntimeException("Không được sửa mã phụ tùng!");
+            throw new RuntimeException("KhÃ´ng Ä‘Æ°á»£c sá»­a mÃ£ phá»¥ tÃ¹ng!");
         }
         existing.setTenPT(updateData.getTenPT());
         existing.setDonGia(updateData.getDonGia());
@@ -63,7 +64,7 @@ public class PartServiceImpl implements PartService {
     @Override
     public void deletePart(String maPT) {
         if (!partRepository.existsById(maPT)) {
-            throw new RuntimeException("Không tìm thấy phụ tùng để xóa!");
+            throw new RuntimeException("KhÃ´ng tÃ¬m tháº¥y phá»¥ tÃ¹ng Ä‘á»ƒ xÃ³a!");
         }
         partRepository.deleteById(maPT);
     }

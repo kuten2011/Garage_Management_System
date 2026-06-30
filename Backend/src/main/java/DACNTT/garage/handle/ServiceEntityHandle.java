@@ -1,7 +1,7 @@
 package DACNTT.garage.handle;
 
-import DACNTT.garage.dto.ServiceEntityDTO;
 import DACNTT.garage.dto.ServiceBatchCreateRequest;
+import DACNTT.garage.dto.ServiceEntityDTO;
 import DACNTT.garage.mapper.ServiceEntityMapper;
 import DACNTT.garage.model.ServiceEntity;
 import DACNTT.garage.repository.BranchRepository;
@@ -33,12 +33,9 @@ public class ServiceEntityHandle {
             int page, int size, String search, Double priceFrom, Double priceTo, String maChiNhanh) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("maDV").ascending());
-
         Page<ServiceEntity> resultPage = serviceEntityService.searchServices(
                 search, priceFrom, priceTo, maChiNhanh, pageable);
-
         Page<ServiceEntityDTO> dtoPage = resultPage.map(serviceEntityMapper::toServiceEntityDTO);
-
         return ResponseEntity.ok(dtoPage);
     }
 
@@ -97,7 +94,7 @@ public class ServiceEntityHandle {
             return ResponseEntity.badRequest().build();
         }
         ServiceEntity entity = serviceEntityMapper.toEntity(dto);
-        entity.setMaDV(maDV); // Đảm bảo mã không đổi
+        entity.setMaDV(maDV);
         ServiceEntity updated = serviceEntityService.save(entity);
         return ResponseEntity.ok(serviceEntityMapper.toServiceEntityDTO(updated));
     }

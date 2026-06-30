@@ -40,6 +40,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     public Employee createEmployee(EmployeeDTO dto) {
         String newMaNV = generateNextMaNV();
         dto.setMaNV(newMaNV);
+        if (dto.getEmail() != null) {
+            dto.setEmail(dto.getEmail().trim().toLowerCase());
+        }
 
         Employee employee = employeeMapper.toEmployee(dto);
         employee.setRole(mapVaiTroToRole(dto.getVaiTro()));
@@ -110,7 +113,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             existing.setSdt(dto.getSdt());
         }
         if (dto.getEmail() != null) {
-            existing.setEmail(dto.getEmail());
+            existing.setEmail(dto.getEmail().trim().toLowerCase());
         }
         if (dto.getMatKhau() != null && !dto.getMatKhau().isBlank()) {
             existing.setMatKhau(passwordEncoder.encode(dto.getMatKhau()));

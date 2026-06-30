@@ -4,6 +4,7 @@ import axiosInstance from "../../api/axiosInstance";
 import { useNavigate, Link } from "react-router-dom";
 import { LogIn, AlertCircle } from "lucide-react";
 import { notify } from "../../utils/notify";
+import { saveAuthSession } from "../../utils/authStorage";
 
 export default function AdminLogin() {
   //const [email, setEmail] = useState("admin@gara.com");
@@ -29,11 +30,7 @@ export default function AdminLogin() {
       );
 
       // Lưu token và thông tin user
-      localStorage.setItem("token", res.data.jwt);
-      if (res.data.refreshToken) {
-        localStorage.setItem("refreshToken", res.data.refreshToken);
-      }
-      localStorage.setItem("user", JSON.stringify(res.data));
+      saveAuthSession(res.data);
 
       // Lấy roles từ authorities
       const authorities = res.data.authorities || [];

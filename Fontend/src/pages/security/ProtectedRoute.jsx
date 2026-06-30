@@ -1,27 +1,22 @@
 import { Navigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import { getStoredAuth, isAuthenticated } from "../../utils/authStorage";
 
 export default function ProtectedRoute({ children }) {
-  const token = localStorage.getItem("token");
-  const refreshToken = localStorage.getItem("refreshToken");
+  const { token, refreshToken } = getStoredAuth();
 
-  if (!token && !refreshToken) return <Navigate to="/login" replace />;
+  if (!isAuthenticated()) return <Navigate to="/login" replace />;
 
-  try {
-    if (token) {
+  if (token) {
+    try {
       const decoded = jwtDecode(token);
-
-      if (decoded.exp * 1000 < Date.now() && !refreshToken) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("refreshToken");
+      if (decoded?.exp && decoded.exp * 1000 < Date.now() && !refreshToken) {
         return <Navigate to="/login" replace />;
       }
-    }
-  } catch (err) {
-    if (!refreshToken) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
-      return <Navigate to="/login" replace />;
+    } catch {
+      if (!refreshToken) {
+        return <Navigate to="/login" replace />;
+      }
     }
   }
 

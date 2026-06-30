@@ -33,15 +33,10 @@ import MyRepairs from "./customer/MyRepairs";
 import InfoPage from "./customer/InfoPage";
 import ContactPage from "./customer/ContactPage";
 import ToastHost from "../components/ui/ToastHost";
+import { getStoredRoles, isAuthenticated } from "../utils/authStorage";
 
 function getUserRoles() {
-  try {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const authorities = user.authorities || [];
-    return authorities.map((auth) => (typeof auth === "string" ? auth : auth.authority));
-  } catch {
-    return [];
-  }
+  return getStoredRoles();
 }
 
 function hasAnyRole(allowedRoles) {
@@ -54,9 +49,7 @@ function ProtectedRoleRoute({ children, allowedRoles, fallback = "/login" }) {
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const refreshToken = localStorage.getItem("refreshToken");
-    const authenticated = !!token || !!refreshToken;
+    const authenticated = isAuthenticated();
     setAllowed(authenticated && hasAnyRole(allowedRoles));
     setReady(true);
   }, [allowedRoles]);

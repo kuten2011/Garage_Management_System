@@ -42,34 +42,18 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
         CorsConfiguration config = new CorsConfiguration();
-
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
                 "http://localhost:4173",
-//                "https://performing-sizes-given-timing.trycloudflare.com/",
                 "https://web-gara.vercel.app"
         ));
-
-        config.setAllowedMethods(List.of(
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE",
-                "PATCH",
-                "OPTIONS"
-        ));
-
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
-
         config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-
         return source;
     }
 
@@ -77,31 +61,31 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                // Thêm: kích hoạt CORS với config ở trên
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Public routes
                         .requestMatchers("/", "/index.html", "/static/**", "/assets/**",
                                 "/css/**", "/js/**", "/img/**", "/favicon.ico", "/health").permitAll()
-                        .requestMatchers("/auth/**", "/chatbot/**").permitAll()
 
-                        // Public catalog
-                        .requestMatchers(HttpMethod.GET, "/public/**").permitAll()
+                        .requestMatchers("/auth/**", "/api/auth/**", "/chatbot/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/public/**", "/api/public/**").permitAll()
 
-                        // Role cụ thể (đặt TRƯỚC rule chung /admin/**)
-                        .requestMatchers("/admin/employees/**", "/admin/customers/**",
-                                "/admin/branches/**", "/admin/reports/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers("/admin/bookings/**", "/admin/repairs/**",
-                                "/admin/feedbacks/**", "/admin/part-orders/**").hasAnyRole("ADMIN", "EMPLOYEE")
-                        .requestMatchers("/customer/**").hasRole("CUSTOMER")
+                        .requestMatchers("/admin/employees/**", "/api/admin/employees/**",
+                                "/admin/customers/**", "/api/admin/customers/**",
+                                "/admin/branches/**", "/api/admin/branches/**",
+                                "/admin/reports/**", "/api/admin/reports/**")
+                        .hasAnyRole("ADMIN", "MANAGER")
 
-                        // Rule chung nhất đặt CUỐI
-                        .requestMatchers("/admin/**").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
+                        .requestMatchers("/admin/bookings/**", "/api/admin/bookings/**",
+                                "/admin/repairs/**", "/api/admin/repairs/**",
+                                "/admin/feedbacks/**", "/api/admin/feedbacks/**",
+                                "/admin/part-orders/**", "/api/admin/part-orders/**")
+                        .hasAnyRole("ADMIN", "EMPLOYEE")
 
+                        .requestMatchers("/customer/**", "/api/customer/**").hasRole("CUSTOMER")
+                        .requestMatchers("/admin/**", "/api/admin/**").hasAnyRole("ADMIN", "MANAGER", "EMPLOYEE")
                         .anyRequest().authenticated()
                 )
-
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

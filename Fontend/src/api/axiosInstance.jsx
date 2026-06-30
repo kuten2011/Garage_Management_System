@@ -1,5 +1,6 @@
 import axios from "axios";
 import { notify } from "../utils/notify";
+import { clearAuthStorage, getStoredAuth, saveAuthSession } from "../utils/authStorage";
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api",
@@ -12,15 +13,13 @@ const refreshClient = axios.create({
 let refreshPromise = null;
 
 const clearAuth = () => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("user");
+  clearAuthStorage();
 };
 
 // Tự động thêm token
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const { token } = getStoredAuth();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -53,7 +52,7 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const refreshToken = localStorage.getItem("refreshToken");
+    const { refreshToken } = getStoredAuth();
     if (!refreshToken) {
       clearAuth();
       window.location.href = "/login";
@@ -76,19 +75,12 @@ axiosInstance.interceptors.response.use(
 
       const newAccessToken = refreshResponse.data.jwt;
       const newRefreshToken = refreshResponse.data.refreshToken || refreshToken;
-
-      localStorage.setItem("token", newAccessToken);
-      localStorage.setItem("refreshToken", newRefreshToken);
-      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          ...currentUser,
-          ...refreshResponse.data,
-          jwt: newAccessToken,
-          refreshToken: newRefreshToken,
-        }),
-      );
+      saveAuthSession({
+        ...getStoredAuth().user,
+        ...refreshResponse.data,
+        jwt: newAccessToken,
+        refreshToken: newRefreshToken,
+      });
 
       originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
       return axiosInstance(originalRequest);
